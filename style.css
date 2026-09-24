@@ -2303,77 +2303,93 @@ body {
    ========================================================================== */
 .scroll-hint {
   position: fixed;
-  bottom: 32px;
+  bottom: 36px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   z-index: 9999;
   pointer-events: none;
   opacity: 1;
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
 .scroll-hint-hidden {
   opacity: 0;
-  transform: translateX(-50%) translateY(16px);
+  transform: translateX(-50%) translateY(20px);
 }
 
 .scroll-hint-text {
   font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.85);
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   white-space: nowrap;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 5px 14px;
+  padding: 8px 24px;
   border-radius: var(--radius-full);
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.18), rgba(139, 92, 246, 0.18));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(0, 212, 255, 0.5);
+  /* Neon gradient text */
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(135deg, #00d4ff, #a855f7, #00d4ff);
+  background-size: 200% auto;
+  animation: gradient-shift 3s linear infinite;
+  /* Glow effect via drop-shadow */
+  filter: drop-shadow(0 0 12px rgba(0, 212, 255, 0.7)) drop-shadow(0 0 24px rgba(139, 92, 246, 0.4));
 }
 
 [data-theme="light"] .scroll-hint-text {
-  color: rgba(30, 40, 70, 0.85);
-  background: rgba(255, 255, 255, 0.55);
-  border-color: rgba(0, 0, 0, 0.12);
-  text-shadow: none;
+  background-image: linear-gradient(135deg, #0284c7, #7c3aed, #0284c7);
+  background-size: 200% auto;
+  filter: drop-shadow(0 0 8px rgba(2, 132, 199, 0.5)) drop-shadow(0 0 16px rgba(124, 58, 237, 0.3));
+  border-color: rgba(2, 132, 199, 0.5);
 }
 
 .scroll-hint-arrow {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  animation: scroll-bounce 1.6s ease-in-out infinite;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.25), rgba(139, 92, 246, 0.25));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid rgba(0, 212, 255, 0.55);
+  box-shadow: 0 0 18px rgba(0, 212, 255, 0.45), 0 0 36px rgba(139, 92, 246, 0.25), inset 0 0 12px rgba(0, 212, 255, 0.1);
+  animation: scroll-bounce 1.5s ease-in-out infinite;
 }
 
 .scroll-hint-arrow svg {
-  width: 18px;
-  height: 18px;
-  stroke: rgba(255, 255, 255, 0.9);
+  width: 26px;
+  height: 26px;
+  stroke: #00d4ff;
+  filter: drop-shadow(0 0 6px #00d4ff);
 }
 
 [data-theme="light"] .scroll-hint-arrow {
-  background: rgba(255, 255, 255, 0.6);
-  border-color: rgba(0, 0, 0, 0.12);
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.2), rgba(124, 58, 237, 0.2));
+  border-color: rgba(2, 132, 199, 0.6);
+  box-shadow: 0 0 16px rgba(2, 132, 199, 0.4), 0 0 32px rgba(124, 58, 237, 0.2);
 }
 
 [data-theme="light"] .scroll-hint-arrow svg {
-  stroke: rgba(30, 40, 70, 0.8);
+  stroke: #0284c7;
+  filter: drop-shadow(0 0 5px #0284c7);
 }
 
 @keyframes scroll-bounce {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(7px); }
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(9px) scale(0.95); }
+}
+
+@keyframes gradient-shift {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
 }
