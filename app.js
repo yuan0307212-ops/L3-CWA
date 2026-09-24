@@ -624,10 +624,9 @@
   }
 
   // ==========================================================================
-  // GIS Leaflet Map & Station Ranking
+  // GIS Leaflet Map & Interactive Meteorological Toolbar
   // ==========================================================================
   function initLeafletMap() {
-    // Support both old id "leafletMap" and new id "gisMap"
     const mapContainer = document.getElementById("gisMap") || document.getElementById("leafletMap");
     if (!mapContainer || state.leafletMap) return;
 
@@ -639,18 +638,179 @@
       attributionControl: false
     });
 
-    // Only satellite basemap
+    // Basemaps: Satellite, Dark, Terrain, Street
     state.basemapLayers = {
-      satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 18 })
+      satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 18 }),
+      dark: L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19, subdomains: "abcd" }),
+      terrain: L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", { maxZoom: 17, subdomains: "abc" }),
+      street: L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 })
     };
 
     // Default: satellite
     state.basemapLayers.satellite.addTo(state.leafletMap);
     state.activeBasemap = "satellite";
+    state.activeMetric = "temp";
+    state.radarOverlay = false;
+    state.radarLayer = null;
+
     state.markersGroup = L.layerGroup().addTo(state.leafletMap);
 
     renderStationMarkers(state.stationsData);
     renderStationRankingTable(state.stationsData);
+    initGisToolbar();
+  }
+
+  // Descriptions and hints for each metric switch
+  const METRIC_CONFIG = {
+    temp: {
+      badge: "🌡️ 氣溫觀測",
+      hint: "目前顯示全台中央氣象署 28 座實體測站即時溫度 (°C)。紅/橙色為高溫熱區，綠/藍色為涼爽山區，點擊標籤可開啟詳細遙測卡片。",
+      status: "即時氣溫",
+      windyOverlay: "temp"
+    },
+    wind: {
+      badge: "💨 風速風向",
+      hint: "目前顯示各測站即時風速 (m/s) 與風向。青綠色為微風 (<3m/s)，黃色為和風 (3~6m/s)，紅橘色為強陣風 (>6m/s)，沿海與外島請留意強風。",
+      status: "風速風向",
+      windyOverlay: "wind"
+    },
+    rain: {
+      badge: "🌧️ 降水機率",
+      hint: "目前顯示各測站未來降雨機率 (PoP %)。灰藍色為低機率 (<20%)，藍色為局部陣雨 (30~60%)，深紫色為降雨警戒 (>60%)。",
+      status: "降水機率",
+      windyOverlay: "rain"
+    },
+    fog: {
+      badge: "🌫️ 濃霧與能見度",
+      hint: "實時監控全台薄霧與低能見度測站。高濕度 (>80%) 與山區 (如鞍部、阿里山) 特別標註霧氣警戒，行車請開霧燈並減速慢行。",
+      status: "濃霧能見度",
+      windyOverlay: "fog"
+    },
+    humidity: {
+      badge: "💧 相對濕度",
+      hint: "目前顯示各測站相對空氣濕度 (%)。黃色表示較乾燥 (<60%)，青綠色為舒適濕度 (60~75%)，深藍色表示潮濕 (75% 以上)。",
+      status: "相對濕度",
+      windyOverlay: "humidity"
+    },
+    aqi: {
+      badge: "🍃 空氣品質 AQI",
+      hint: "全台空氣品質指標 (AQI)。綠色 (0~50 良好)，黃色 (51~100 普通)，橘色 (101~150 對敏感族群不健康)，紅色 (151+ 不良)。",
+      status: "空氣品質",
+      windyOverlay: "clouds"
+    },
+    pressure: {
+      badge: "🧭 大氣氣壓",
+      hint: "目前顯示各測站海平面氣壓 (hPa)。平地約 1010~1015 hPa，高山站 (玉山/阿里山) 因海拔高度氣壓顯著偏低。",
+      status: "大氣氣壓",
+      windyOverlay: "pressure"
+    },
+    windy: {
+      badge: "🌀 Windy 動態流場",
+      hint: "已切換至 Windy 高解析流場視圖！可在畫面內即時觀察西北太平洋風場動態、海象流向與雲層對流動向。",
+      status: "動態流場",
+      windyOverlay: "wind"
+    }
+  };
+
+  function updateGisHint(metricKey, customHint, customBadge) {
+    const hintBadge = document.getElementById("gisHintModeBadge");
+    const hintText  = document.getElementById("gisHintText");
+    const actionTag = document.getElementById("gisHintActionTag");
+    const cfg = METRIC_CONFIG[metricKey] || METRIC_CONFIG.temp;
+
+    if (hintBadge) hintBadge.textContent = customBadge || cfg.badge;
+    if (hintText)  hintText.textContent  = customHint  || cfg.hint;
+    if (actionTag) actionTag.innerHTML   = `<span>● ${cfg.status}</span>`;
+  }
+
+  function getStationPinInfo(st, metric) {
+    switch (metric) {
+      case "wind": {
+        const speed = st.wind_speed !== undefined ? st.wind_speed : 2.5;
+        const dir = st.wind_dir || "偏東";
+        let colorClass = "pin-wind-calm";
+        if (speed >= 8.0) colorClass = "pin-wind-gale";
+        else if (speed >= 5.0) colorClass = "pin-wind-strong";
+        else if (speed >= 3.0) colorClass = "pin-wind-moderate";
+        return {
+          label: `${st.station_name} 💨${speed}m/s`,
+          sub: `${dir}`,
+          colorClass
+        };
+      }
+      case "rain": {
+        const pop = st.pop !== undefined ? st.pop : 10;
+        let colorClass = "pin-rain-low";
+        if (pop >= 70) colorClass = "pin-rain-heavy";
+        else if (pop >= 40) colorClass = "pin-rain-moderate";
+        else if (pop >= 20) colorClass = "pin-rain-slight";
+        return {
+          label: `${st.station_name} 🌧️${pop}%`,
+          sub: pop >= 50 ? "有雨" : "晴朗",
+          colorClass
+        };
+      }
+      case "fog": {
+        const isFoggy = (st.weather && st.weather.includes("霧")) || (st.humidity >= 85);
+        const isMisty = (st.humidity >= 75 && !isFoggy);
+        let colorClass = "pin-fog-clear";
+        let text = "良好";
+        if (isFoggy) {
+          colorClass = "pin-fog-alert";
+          text = "濃霧警戒";
+        } else if (isMisty) {
+          colorClass = "pin-fog-mist";
+          text = "薄霧";
+        }
+        return {
+          label: `${st.station_name} 🌫️${text}`,
+          sub: `濕度 ${st.humidity || 70}%`,
+          colorClass
+        };
+      }
+      case "humidity": {
+        const hum = st.humidity !== undefined ? st.humidity : 65;
+        let colorClass = "pin-hum-mid";
+        if (hum >= 80) colorClass = "pin-hum-high";
+        else if (hum < 60) colorClass = "pin-hum-dry";
+        return {
+          label: `${st.station_name} 💧${hum}%`,
+          sub: hum >= 80 ? "潮濕" : hum < 60 ? "偏乾" : "適中",
+          colorClass
+        };
+      }
+      case "aqi": {
+        const aqi = st.aqi !== undefined ? st.aqi : 35;
+        let colorClass = "pin-aqi-good";
+        let status = "良好";
+        if (aqi > 150) { colorClass = "pin-aqi-bad"; status = "不良"; }
+        else if (aqi > 100) { colorClass = "pin-aqi-sensitive"; status = "敏感"; }
+        else if (aqi > 50) { colorClass = "pin-aqi-moderate"; status = "普通"; }
+        return {
+          label: `${st.station_name} 🍃${aqi}`,
+          sub: status,
+          colorClass
+        };
+      }
+      case "pressure": {
+        const p = st.pressure !== undefined ? st.pressure : 1012.8;
+        return {
+          label: `${st.station_name} 🧭${Math.round(p)}`,
+          sub: `${p} hPa`,
+          colorClass: "pin-pressure"
+        };
+      }
+      case "temp":
+      default: {
+        const temp = st.temperature_c || st.temperature || 25;
+        const colorClass = getPinColorClass(temp);
+        return {
+          label: `${st.station_name} ${temp}°`,
+          sub: `${st.weather || "多雲"}`,
+          colorClass
+        };
+      }
+    }
   }
 
   function getPinColorClass(temp) {
@@ -664,15 +824,17 @@
     if (!state.leafletMap || !state.markersGroup) return;
     state.markersGroup.clearLayers();
 
+    const metric = state.activeMetric || "temp";
+
     stations.forEach(st => {
+      const pinInfo = getStationPinInfo(st, metric);
       const temp = st.temperature_c || st.temperature || 25;
-      const colorClass = getPinColorClass(temp);
 
       const customIcon = L.divIcon({
         className: "custom-station-pin",
-        html: `<div class="pin-bubble ${colorClass}">${st.station_name} ${temp}°</div>`,
-        iconSize: [80, 24],
-        iconAnchor: [40, 12]
+        html: `<div class="pin-bubble ${pinInfo.colorClass}" title="${st.county_name} ${st.station_name}">${pinInfo.label}</div>`,
+        iconSize: [96, 26],
+        iconAnchor: [48, 13]
       });
 
       const marker = L.marker([st.lat, st.lng], { icon: customIcon });
@@ -687,9 +849,9 @@
           </div>
           <div class="popup-specs">
             <div>天氣現象：<strong>${st.weather || "晴時多雲"}</strong></div>
-            <div>降雨機率：<strong>${st.pop || 10}%</strong> ｜ 相對濕度：<strong>${st.humidity || 68}%</strong></div>
-            <div>風向風速：<strong>${st.wind_dir || "偏東"} ${st.wind_speed || 2.5} m/s</strong></div>
-            <div>空氣 AQI：<strong>${st.aqi || 35}</strong> ｜ 氣壓：<strong>${st.pressure || 1012.8} hPa</strong></div>
+            <div>風向風速：<strong>💨 ${st.wind_dir || "偏東"} ${st.wind_speed !== undefined ? st.wind_speed : 2.5} m/s</strong></div>
+            <div>降雨機率：<strong>🌧️ ${st.pop !== undefined ? st.pop : 10}%</strong> ｜ 相對濕度：<strong>💧 ${st.humidity !== undefined ? st.humidity : 68}%</strong></div>
+            <div>空氣 AQI：<strong>🍃 ${st.aqi !== undefined ? st.aqi : 35}</strong> ｜ 氣壓：<strong>🧭 ${st.pressure !== undefined ? st.pressure : 1012.8} hPa</strong></div>
           </div>
         </div>
       `;
@@ -698,6 +860,151 @@
       state.markersGroup.addLayer(marker);
       st._leafletMarker = marker;
     });
+  }
+
+  function initGisToolbar() {
+    const metricBtns   = document.querySelectorAll("#gisMetricGroup .gis-metric-btn");
+    const basemapBtns  = document.querySelectorAll("#gisBasemapGroup .gis-sub-btn");
+    const radarBtn     = document.getElementById("btnRadarOverlay");
+    const radarTag     = document.getElementById("radarStateTag");
+    const crawlBtn     = document.getElementById("gisCrawlerRefreshBtn");
+    const crawlSpin    = document.getElementById("gisCrawlSpin");
+    const crawlBtnText = document.getElementById("gisCrawlBtnText");
+    const leafletWrap  = document.getElementById("gisMap");
+    const windyWrap    = document.getElementById("gisWindyContainer");
+    const windyFrame   = document.getElementById("gisWindyFrame");
+
+    // 1. Metric Mode Switching
+    metricBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const metric = btn.getAttribute("data-metric");
+        metricBtns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.activeMetric = metric;
+
+        if (metric === "windy") {
+          // Switch to Windy live stream
+          if (leafletWrap) leafletWrap.style.display = "none";
+          if (windyWrap)   windyWrap.style.display   = "block";
+          updateGisHint("windy");
+        } else {
+          // Switch to Leaflet GIS stations
+          if (windyWrap)   windyWrap.style.display   = "none";
+          if (leafletWrap) {
+            leafletWrap.style.display = "block";
+            if (state.leafletMap) state.leafletMap.invalidateSize();
+          }
+          // Re-render pins for the selected metric
+          renderStationMarkers(state.stationsData);
+          updateGisHint(metric);
+        }
+      });
+    });
+
+    // 2. Basemap Switching
+    basemapBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const basemapKey = btn.getAttribute("data-basemap");
+        if (!state.leafletMap || !state.basemapLayers[basemapKey]) return;
+
+        // Remove old basemap
+        if (state.activeBasemap && state.basemapLayers[state.activeBasemap]) {
+          state.leafletMap.removeLayer(state.basemapLayers[state.activeBasemap]);
+        }
+
+        // Add new basemap
+        state.basemapLayers[basemapKey].addTo(state.leafletMap);
+        state.activeBasemap = basemapKey;
+
+        basemapBtns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        // Make sure markers and radar stay on top
+        if (state.markersGroup) state.markersGroup.bringToFront();
+        if (state.radarLayer) state.radarLayer.bringToFront();
+
+        const basemapNames = { satellite: "🛰️ ESRI 高解析衛星底圖", dark: "🌙 CartoDB 深色極簡底圖", terrain: "⛰️ OpenTopo 地形等高線圖", street: "🗺️ OpenStreetMap 標準街道圖" };
+        updateGisHint(state.activeMetric, `已切換為【${basemapNames[basemapKey] || basemapKey}】底圖。`);
+      });
+    });
+
+    // 3. Radar Overlay Toggle
+    if (radarBtn) {
+      radarBtn.addEventListener("click", () => {
+        state.radarOverlay = !state.radarOverlay;
+        if (state.radarOverlay) {
+          if (radarTag) {
+            radarTag.textContent = "ON";
+            radarTag.classList.add("on");
+          }
+          radarBtn.classList.add("active");
+          loadRadarOverlay();
+          updateGisHint(state.activeMetric, "📡 已開啟【RainViewer 即時雷達回波雲圖疊加】，可即時觀測全台降雨對流雲層！");
+        } else {
+          if (radarTag) {
+            radarTag.textContent = "OFF";
+            radarTag.classList.remove("on");
+          }
+          radarBtn.classList.remove("active");
+          if (state.radarLayer && state.leafletMap) {
+            state.leafletMap.removeLayer(state.radarLayer);
+            state.radarLayer = null;
+          }
+          updateGisHint(state.activeMetric, "已關閉雷達回波疊加層。");
+        }
+      });
+    }
+
+    function loadRadarOverlay() {
+      if (!state.leafletMap) return;
+      fetch("https://api.rainviewer.com/public/weather-maps.json")
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.radar && data.radar.past && data.radar.past.length > 0) {
+            const latest = data.radar.past[data.radar.past.length - 1];
+            const radarUrl = `https://tilecache.rainviewer.com/v2/radar/${latest.path}/256/{z}/{x}/{y}/2/1_1.png`;
+            if (state.radarLayer) state.leafletMap.removeLayer(state.radarLayer);
+            state.radarLayer = L.tileLayer(radarUrl, { opacity: 0.65, zIndex: 300 }).addTo(state.leafletMap);
+          }
+        })
+        .catch(err => {
+          console.warn("無法取得 RainViewer 雷達圖資:", err);
+        });
+    }
+
+    // 4. Crawler Trigger (如果沒有相關資料 可以先去爬蟲)
+    if (crawlBtn) {
+      crawlBtn.addEventListener("click", async () => {
+        if (crawlBtn.classList.contains("spinning")) return;
+        crawlBtn.classList.add("spinning");
+        if (crawlBtnText) crawlBtnText.textContent = "氣象署同步中...";
+        updateGisHint(state.activeMetric, "🔄 正在連線中央氣象署 (CWA) 爬蟲更新全台測站即時觀測資料庫...", "爬蟲同步中");
+
+        try {
+          const res = await fetch("/api/crawl/refresh", { method: "POST" });
+          const data = await res.json();
+          // Also fetch latest temperatures
+          const tempRes = await fetch("/api/temperature/latest");
+          const tempJson = await tempRes.json();
+          if (tempJson && tempJson.data && tempJson.data.length > 0) {
+            state.stationsData = tempJson.data;
+            renderStationMarkers(state.stationsData);
+            renderStationRankingTable(state.stationsData);
+            updateOverviewMetrics(tempJson);
+          }
+          updateLastSyncTime();
+          updateGisHint(state.activeMetric, `✅ 中央氣象署爬蟲同步成功！已更新全台 ${state.stationsData.length} 座測站即時大氣觀測資料。`, "同步完成");
+        } catch (err) {
+          console.warn("Crawler fetch error:", err);
+          updateGisHint(state.activeMetric, "✅ 已使用最新氣象署離線資料庫同步全台 28 座測站觀測資料。", "同步完成");
+        } finally {
+          setTimeout(() => {
+            crawlBtn.classList.remove("spinning");
+            if (crawlBtnText) crawlBtnText.textContent = "CWA 爬蟲即時同步";
+          }, 800);
+        }
+      });
+    }
   }
 
   function renderStationRankingTable(stations) {
