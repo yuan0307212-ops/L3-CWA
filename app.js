@@ -514,50 +514,47 @@
             <span class="county-name">${c.locationName}</span>
             <span class="county-region-chip">${c.region || "臺灣"}</span>
           </div>
-          <div class="county-temp-group">
-            <div class="county-now-wx">
-              <span>${emoji1}</span>
-              <span>${f1.data.Wx}</span>
-            </div>
-            <div class="county-now-temp">${f1.data.MaxT}°C</div>
-            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
+          <div class="county-row-info">
+            <span class="county-row-emoji">${emoji1}</span>
+            <span class="county-row-wx">${f1.data.Wx}</span>
+            <span class="county-row-temp">${f1.data.MinT}° / ${f1.data.MaxT}°</span>
+            <span class="county-row-pop">💧${f1.data.PoP}%</span>
           </div>
-        </div>
-
-        <div class="forecast-strip">
-          <div class="period-cell">
-            <span class="period-title">${f1.startTime || "今日白天"}</span>
-            <span class="period-icon-wx">${emoji1}</span>
-            <span class="period-wx-text">${f1.data.Wx}</span>
-            <span class="period-temp-range">${f1.data.MinT}° ~ ${f1.data.MaxT}°</span>
-            <span class="period-pop">💧 ${f1.data.PoP}%</span>
-          </div>
-          <div class="period-cell">
-            <span class="period-title">${f2.startTime || "今晚明晨"}</span>
-            <span class="period-icon-wx">${emoji2}</span>
-            <span class="period-wx-text">${f2.data.Wx}</span>
-            <span class="period-temp-range">${f2.data.MinT}° ~ ${f2.data.MaxT}°</span>
-            <span class="period-pop">💧 ${f2.data.PoP}%</span>
-          </div>
-          <div class="period-cell">
-            <span class="period-title">${f3.startTime || "明日白天"}</span>
-            <span class="period-icon-wx">${emoji3}</span>
-            <span class="period-wx-text">${f3.data.Wx}</span>
-            <span class="period-temp-range">${f3.data.MinT}° ~ ${f3.data.MaxT}°</span>
-            <span class="period-pop">💧 ${f3.data.PoP}%</span>
-          </div>
+          <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
         </div>
 
         <div class="county-drawer">
-          <div class="drawer-details-grid">
-            <div class="drawer-item"><span class="item-k">相對濕度：</span><span class="item-v">${c.details?.humidity || 68}%</span></div>
-            <div class="drawer-item"><span class="item-k">風速風向：</span><span class="item-v">${c.details?.wind || "2.8 m/s (偏東風)"}</span></div>
-            <div class="drawer-item"><span class="item-k">紫外線指數：</span><span class="item-v">${c.details?.uv || "7.2 (高量級)"}</span></div>
-            <div class="drawer-item"><span class="item-k">空氣品質 AQI：</span><span class="item-v">${c.details?.aqi || 38} (良好)</span></div>
+          <div class="forecast-strip">
+            <div class="period-cell">
+              <span class="period-title">${f1.startTime || "今日白天"}</span>
+              <span class="period-icon-wx">${emoji1}</span>
+              <span class="period-wx-text">${f1.data.Wx}</span>
+              <span class="period-temp-range">${f1.data.MinT}° ~ ${f1.data.MaxT}°</span>
+              <span class="period-pop">💧 ${f1.data.PoP}%</span>
+            </div>
+            <div class="period-cell">
+              <span class="period-title">${f2.startTime || "今晚明晨"}</span>
+              <span class="period-icon-wx">${emoji2}</span>
+              <span class="period-wx-text">${f2.data.Wx}</span>
+              <span class="period-temp-range">${f2.data.MinT}° ~ ${f2.data.MaxT}°</span>
+              <span class="period-pop">💧 ${f2.data.PoP}%</span>
+            </div>
+            <div class="period-cell">
+              <span class="period-title">${f3.startTime || "明日白天"}</span>
+              <span class="period-icon-wx">${emoji3}</span>
+              <span class="period-wx-text">${f3.data.Wx}</span>
+              <span class="period-temp-range">${f3.data.MinT}° ~ ${f3.data.MaxT}°</span>
+              <span class="period-pop">💧 ${f3.data.PoP}%</span>
+            </div>
           </div>
-          <p class="drawer-advice">💡 <strong>生活氣候指南：</strong>${c.details?.note || "氣候舒適平穩，外出請做好防曬與水分補充。"}</p>
+          <div class="drawer-details-grid">
+            <div class="drawer-item"><span class="item-k">相對濕度</span><span class="item-v">${c.details?.humidity || 68}%</span></div>
+            <div class="drawer-item"><span class="item-k">風速風向</span><span class="item-v">${c.details?.wind || "2.8 m/s 偏東風"}</span></div>
+            <div class="drawer-item"><span class="item-k">紫外線</span><span class="item-v">${c.details?.uv || "7.2 高量級"}</span></div>
+            <div class="drawer-item"><span class="item-k">AQI</span><span class="item-v">${c.details?.aqi || 38} 良好</span></div>
+          </div>
         </div>
       `;
 
