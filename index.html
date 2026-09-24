@@ -181,11 +181,22 @@
               </div>
 
               <div class="hero-windy-mini">
-                <div class="windy-badge-label">ECMWF 9km 氣候流場</div>
+                <div class="windy-layer-header">
+                  <span class="windy-badge-label" id="windyLayerLabel">🌡️ ECMWF 氣温層</span>
+                  <div class="windy-layer-tabs" id="windyLayerTabs" role="group" aria-label="天氣圖層切換">
+                    <button class="wlayer-btn active" data-overlay="temp"     data-label="🌡️ ECMWF 氣温層"    title="地面氣温分佈圖">溫度</button>
+                    <button class="wlayer-btn"        data-overlay="wind"     data-label="💨 ECMWF 風速層"    title="地面風速風向圖">風速</button>
+                    <button class="wlayer-btn"        data-overlay="rain"     data-label="🌧️ ECMWF 降水層"    title="降水量預報分佈">降水</button>
+                    <button class="wlayer-btn"        data-overlay="clouds"   data-label="☁️ ECMWF 雲量層"    title="高中低雲系分佈">雲量</button>
+                    <button class="wlayer-btn"        data-overlay="humidity" data-label="💧 ECMWF 濕度層"    title="相對濕度分佈">濕度</button>
+                    <button class="wlayer-btn"        data-overlay="fog"      data-label="🌫️ ECMWF 霧層"      title="地面能見度與霧">霧</button>
+                  </div>
+                </div>
+                <div class="windy-layer-hint">👆 點擊按鈕切換天氣圖層，左上角可進一步調整</div>
                 <div class="windy-preview-wrap">
                   <iframe 
                     id="windyMiniFrame"
-                    src="https://embed.windy.com/embed2.html?lat=23.7&lon=120.9&detailLat=25.04&detailLon=121.55&width=100%&height=180&zoom=6&level=surface&overlay=temp&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=celsius&radarRange=-1"
+                    src="https://embed.windy.com/embed2.html?lat=23.7&lon=120.9&detailLat=25.04&detailLon=121.55&width=100%25&height=180&zoom=6&level=surface&overlay=temp&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=celsius&radarRange=-1"
                     frameborder="0"
                     title="Windy Surface Temperature Map">
                   </iframe>

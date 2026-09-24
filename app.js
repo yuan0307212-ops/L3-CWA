@@ -1028,9 +1028,43 @@
     initImageryModal();
     initCourseSection();
     initRefreshAction();
+    initWindyLayerTabs();
 
     // Fetch live APIs in background
     fetchAllData();
+  }
+
+  // ==========================================================================
+  // Windy Hero Layer Switcher
+  // ==========================================================================
+  function initWindyLayerTabs() {
+    const tabs    = document.getElementById("windyLayerTabs");
+    const frame   = document.getElementById("windyMiniFrame");
+    const label   = document.getElementById("windyLayerLabel");
+    if (!tabs || !frame || !label) return;
+
+    const BASE_URL = "https://embed.windy.com/embed2.html"
+      + "?lat=23.7&lon=120.9&detailLat=25.04&detailLon=121.55"
+      + "&width=100%25&height=180&zoom=6&level=surface"
+      + "&product=ecmwf&menu=&message=true&marker=&calendar=now"
+      + "&pressure=&type=map&location=coordinates&detail="
+      + "&metricWind=default&metricTemp=celsius&radarRange=-1";
+
+    tabs.querySelectorAll(".wlayer-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        // Update active state
+        tabs.querySelectorAll(".wlayer-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        // Update label
+        const newLabel = btn.getAttribute("data-label") || "ECMWF 圖層";
+        label.textContent = newLabel;
+
+        // Swap iframe src
+        const overlay = btn.getAttribute("data-overlay");
+        frame.src = BASE_URL + "&overlay=" + overlay;
+      });
+    });
   }
 
   // Run on DOM ready
@@ -1039,4 +1073,6 @@
   } else {
     init();
   }
+
 })();
+

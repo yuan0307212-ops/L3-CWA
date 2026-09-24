@@ -608,29 +608,77 @@ body {
   color: var(--text-main);
 }
 
-.hero-windy-mini {
+/* Windy Layer Header */
+.windy-layer-header {
   display: flex;
-  flex-direction: column;
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  overflow: hidden;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .windy-badge-label {
-  padding: 6px 12px;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-family: var(--font-mono);
   font-weight: 600;
   color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Layer Toggle Tabs */
+.windy-layer-tabs {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.wlayer-btn {
+  font-family: var(--font-sans);
+  font-size: 0.67rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  white-space: nowrap;
+  position: relative;
+}
+
+.wlayer-btn:hover {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  background: rgba(0, 220, 255, 0.07);
+}
+
+.wlayer-btn.active {
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  color: #0a0f1a;
+  font-weight: 700;
+}
+
+/* Hint text */
+.windy-layer-hint {
+  padding: 4px 10px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  background: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
+  letter-spacing: 0.01em;
 }
 
 .windy-preview-wrap iframe {
   width: 100%;
-  height: 140px;
+  height: 160px;
   display: block;
 }
+
+
 
 /* Indicators Grid */
 .indicators-grid {
