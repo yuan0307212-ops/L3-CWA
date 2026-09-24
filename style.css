@@ -608,8 +608,19 @@ body {
   color: var(--text-main);
 }
 
+/* Hero Windy Mini Container */
+.hero-windy-mini {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
 /* Windy Layer Header */
 .windy-layer-header {
+
   display: flex;
   align-items: center;
   justify-content: space-between;
