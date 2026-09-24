@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Taiwan Weather Central ｜ 台灣天氣觀測網 • 簡約專業氣象平台</title>
+  <title>yuanmei's Taiwan Weather Central ｜ 台灣天氣觀測網 • 簡約專業氣象平台</title>
   <meta name="description" content="Taiwan Weather Central 台灣天氣觀測網：中央氣象署 (CWA) 即時爬蟲、全台 22 縣市詳細預報、雷達回波與衛星雲圖即時觀測、颱風路徑追蹤、災害示警、SQLite 資料庫與 GIS 空間測站渲染。">
 
   <!-- Favicon -->
@@ -26,6 +26,16 @@
   <div class="ambient-backdrop" aria-hidden="true">
     <div class="backdrop-gradient"></div>
     <div class="backdrop-pattern"></div>
+  </div>
+
+  <!-- Scroll Down Hint -->
+  <div class="scroll-hint" id="scrollHint">
+    <span class="scroll-hint-text">下滑以查看更多</span>
+    <div class="scroll-hint-arrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </div>
   </div>
 
   <div class="site-wrapper">
@@ -60,7 +70,7 @@
               <span class="brand-name">TAIWAN WEATHER CENTRAL</span>
               <span class="brand-tag">PRO</span>
             </div>
-            <p class="brand-sub">台灣氣象即時觀測中心 ｜ 中央氣象署 (CWA) × SQLite × GIS</p>
+            <p class="brand-sub">yuanmei's 台灣氣象即時觀測中心 ｜ 中央氣象署 (CWA) × SQLite × GIS</p>
           </div>
         </div>
 
@@ -765,6 +775,20 @@
 
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scroll Hint Logic -->
+  <script>
+    (function() {
+      const hint = document.getElementById('scrollHint');
+      let hidden = false;
+      window.addEventListener('scroll', function() {
+        if (!hidden && window.scrollY > 80) {
+          hint.classList.add('scroll-hint-hidden');
+          hidden = true;
+        }
+      }, { passive: true });
+    })();
+  </script>
 
   <!-- Core JavaScript Logic -->
   <script src="app.js"></script>
