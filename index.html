@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taiwan Weather Central ｜ 台灣天氣觀測網 • 簡約專業氣象平台</title>
+  <meta name="description" content="Taiwan Weather Central 台灣天氣觀測網：中央氣象署 (CWA) 即時爬蟲、全台 22 縣市詳細預報、雷達回波與衛星雲圖即時觀測、颱風路徑追蹤、災害示警、SQLite 資料庫與 GIS 空間測站渲染。">
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌦️</text></svg>">
+
+  <!-- Google Fonts: Inter, Noto Sans TC, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient Backdrop -->
+  <div class="ambient-backdrop" aria-hidden="true">
+    <div class="backdrop-gradient"></div>
+    <div class="backdrop-pattern"></div>
+  </div>
+
+  <div class="site-wrapper">
+    <!-- Top Notice / Meteorological Alert Ticker -->
+    <aside class="top-alert-banner" id="topAlertBanner">
+      <div class="banner-inner">
+        <div class="alert-indicator">
+          <span class="beacon-dot"></span>
+          <span class="beacon-label">即時示警</span>
+        </div>
+        <div class="alert-message" id="bannerAlertText">
+          中央氣象署觀測連線中：全台氣候平穩，午後山區留意局部短暫陣雨，臺灣沿海及離島空曠處請留意強陣風。
+        </div>
+        <div class="banner-meta">
+          <span class="meta-tag">CWA 官方數據源</span>
+          <span class="meta-tag">標準溫標 °C</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Global Navigation Header -->
+    <header class="app-header">
+      <div class="header-inner">
+        <!-- Brand Identity -->
+        <div class="brand-group">
+          <div class="brand-mark">
+            <span class="mark-icon">🛰️</span>
+            <span class="live-ring"></span>
+          </div>
+          <div class="brand-headings">
+            <div class="brand-title-row">
+              <span class="brand-name">TAIWAN WEATHER CENTRAL</span>
+              <span class="brand-tag">PRO</span>
+            </div>
+            <p class="brand-sub">台灣氣象即時觀測中心 ｜ 中央氣象署 (CWA) × SQLite × GIS</p>
+          </div>
+        </div>
+
+
+
+        <!-- Header Actions -->
+        <div class="header-actions">
+          <div class="sync-time-badge" id="lastSyncTime">
+            <span class="sync-dot"></span>
+            <span class="sync-time-text">同步時間：即時</span>
+          </div>
+
+          <!-- Refresh Button -->
+          <button class="icon-action-btn" id="refreshBtn" title="重新整理並觸發爬蟲同步" aria-label="重新整理">
+            <svg class="action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            <span class="btn-caption">同步</span>
+          </button>
+
+          <!-- Theme Toggle -->
+          <button class="icon-action-btn" id="themeToggleBtn" title="切換深淺外觀風格" aria-label="切換主題">
+            <svg class="action-svg sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+            </svg>
+            <svg class="action-svg moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Application Viewport -->
+    <main class="app-main">
+
+      <!-- ====================================================================
+           SECTION 0: GIS 實體測站 - 大地圖 (Satellite Only)
+           ==================================================================== -->
+      <section class="view-panel" id="panelGis">
+        <div class="panel-header-strip">
+          <div class="panel-info">
+            <h2 class="panel-title">🗺️ GIS 實體測站地圖（衛星底圖）</h2>
+            <p class="panel-desc">Leaflet GIS 衛星圖層即時渲染，顯示全台中央氣象署實體測站分佈與觀測數值。</p>
+          </div>
+          <div class="sync-frequency-badge">
+            <span class="refresh-cycle-dot"></span>
+            <span>衛星底圖 · 即時圖層</span>
+          </div>
+        </div>
+
+        <!-- GIS Map Container -->
+        <div class="gis-map-full-wrap">
+          <div id="gisMap" style="width:100%;height:600px;border-radius:12px;overflow:hidden;"></div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           SECTION 1: 即時天氣總覽 (Overview & 22 Counties Forecast)
+           ==================================================================== -->
+      <section class="view-panel" id="panelOverview">
+        <!-- Hero Metrics Dashboard -->
+        <div class="metrics-overview-block">
+          <div class="hero-summary-card">
+            <div class="hero-meta-row">
+              <div class="badge-station-live">
+                <span class="status-pulse-live"></span>
+                <span>全台 28 座實體測站平均觀測</span>
+              </div>
+              <span class="hero-update-stamp" id="heroObsTime">中央氣象署 實時同步</span>
+            </div>
+
+            <div class="hero-content-row">
+              <div class="hero-temp-large">
+                <div class="temp-readout">
+                  <span class="temp-num" id="heroAvgTemp">28.5</span>
+                  <span class="temp-celsius">°C</span>
+                </div>
+                <div class="feels-like-tag">
+                  <span>體感氣溫</span>
+                  <strong id="heroFeelsLike">30.8°C</strong>
+                </div>
+              </div>
+
+              <div class="hero-extremes">
+                <div class="extreme-box extreme-max">
+                  <div class="extreme-label">
+                    <span class="arrow-up">▲</span>
+                    <span>最高溫測站</span>
+                  </div>
+                  <div class="extreme-station" id="heroMaxStation">高雄 33.8°C</div>
+                </div>
+                <div class="extreme-box extreme-min">
+                  <div class="extreme-label">
+                    <span class="arrow-down">▼</span>
+                    <span>最低溫測站</span>
+                  </div>
+                  <div class="extreme-station" id="heroMinStation">玉山 8.5°C</div>
+                </div>
+              </div>
+
+              <div class="hero-windy-mini">
+                <div class="windy-badge-label">ECMWF 9km 氣候流場</div>
+                <div class="windy-preview-wrap">
+                  <iframe 
+                    id="windyMiniFrame"
+                    src="https://embed.windy.com/embed2.html?lat=23.7&lon=120.9&detailLat=25.04&detailLon=121.55&width=100%&height=180&zoom=6&level=surface&overlay=temp&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=celsius&radarRange=-1"
+                    frameborder="0"
+                    title="Windy Surface Temperature Map">
+                  </iframe>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6 Environmental Indicator Cards -->
+          <div class="indicators-grid">
+            <!-- 1. 降雨機率 -->
+            <div class="indicator-card">
+              <div class="indicator-top">
+                <span class="indicator-icon icon-rain">💧</span>
+                <span class="indicator-title">平均降雨機率 (PoP)</span>
+              </div>
+              <div class="indicator-value-row">
+                <span class="indicator-val" id="valPop">20%</span>
+                <span class="indicator-state state-good">降雨偏低</span>
+              </div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-fill fill-blue" id="meterPopFill" style="width: 20%;"></div>
+              </div>
+              <p class="indicator-note">全島多數地區晴朗，山區午後短暫陣雨</p>
+            </div>
+
+            <!-- 2. 風速與風向 -->
+            <div class="indicator-card">
+              <div class="indicator-top">
+                <span class="indicator-icon icon-wind">💨</span>
+                <span class="indicator-title">測站最大風速</span>
+              </div>
+              <div class="indicator-value-row">
+                <span class="indicator-val" id="valWind">7.2 <small>m/s</small></span>
+                <span class="indicator-state state-neutral" id="valWindDir">東南東風 (4級)</span>
+              </div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-fill fill-cyan" style="width: 45%;"></div>
+              </div>
+              <p class="indicator-note">臺灣海峽與離島沿海測站風力偏強</p>
+            </div>
+
+            <!-- 3. 紫外線指數 -->
+            <div class="indicator-card">
+              <div class="indicator-top">
+                <span class="indicator-icon icon-uv">☀️</span>
+                <span class="indicator-title">紫外線指數 (UV Index)</span>
+              </div>
+              <div class="indicator-value-row">
+                <span class="indicator-val" id="valUv">7.5</span>
+                <span class="indicator-state state-orange" id="valUvTag">過量級</span>
+              </div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-fill fill-orange" style="width: 75%;"></div>
+              </div>
+              <p class="indicator-note">外出建議著防曬衣物，曝曬 20 分鐘需遮陽</p>
+            </div>
+
+            <!-- 4. 空氣品質 -->
+            <div class="indicator-card">
+              <div class="indicator-top">
+                <span class="indicator-icon icon-aqi">🍃</span>
+                <span class="indicator-title">空氣品質指標 (AQI)</span>
+              </div>
+              <div class="indicator-value-row">
+                <span class="indicator-val" id="valAqi">38</span>
+                <span class="indicator-state state-green" id="valAqiTag">良好 (Good)</span>
+              </div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-fill fill-green" style="width: 38%;"></div>
+              </div>
+              <p class="indicator-note">全台空氣品質普遍良好，適宜戶外活動</p>
+            </div>
+
+            <!-- 5. 相對濕度 -->
+            <div class="indicator-card">
+              <div class="indicator-top">
+                <span class="indicator-icon icon-humidity">🌫️</span>
+                <span class="indicator-title">平均相對濕度</span>
+              </div>
+              <div class="indicator-value-row">
+                <span class="indicator-val" id="valHumidity">68%</span>
+                <span class="indicator-state state-good">適度通爽</span>
+              </div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-fill fill-teal" style="width: 68%;"></div>
+              </div>
+              <p class="indicator-note">大氣中層水氣適中，體感舒適</p>
+            </div>
+
+            <!-- 6. 地面氣壓 -->
+            <div class="indicator-card">
+              <div class="indicator-top">
+                <span class="indicator-icon icon-pressure">⏱️</span>
+                <span class="indicator-title">地面大氣壓</span>
+              </div>
+              <div class="indicator-value-row">
+                <span class="indicator-val" id="valPressure">1012.8 <small>hPa</small></span>
+                <span class="indicator-state state-neutral">氣壓穩定</span>
+              </div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-fill fill-purple" style="width: 60%;"></div>
+              </div>
+              <p class="indicator-note">高低氣壓平穩過境，無劇烈低氣壓逼近</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 22 Counties Weather Overview & Accordion Section -->
+        <div class="counties-section-container">
+          <div class="section-control-bar">
+            <div class="section-title-wrap">
+              <h2 class="section-heading">📍 各地天氣概況 (點擊縣市查看詳細 36 小時預報)</h2>
+              <p class="section-sub">即時同步中央氣象署 22 縣市三時段預報，點選任一卡片可展開溫差區間、降雨機率與各項指標。</p>
+            </div>
+
+            <div class="filter-and-search">
+              <!-- Region Filters -->
+              <div class="pill-filters" id="regionFilters" role="group" aria-label="地區快選">
+                <button class="pill-btn active" data-region="all">全台 22 縣市</button>
+                <button class="pill-btn" data-region="北部">北部</button>
+                <button class="pill-btn" data-region="中部">中部</button>
+                <button class="pill-btn" data-region="南部">南部</button>
+                <button class="pill-btn" data-region="東部">東部</button>
+                <button class="pill-btn" data-region="外島">外島</button>
+              </div>
+
+              <!-- County Search -->
+              <div class="search-field">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="countySearchInput" placeholder="搜尋縣市（如：臺北、臺中、高雄、宜蘭）..." aria-label="搜尋縣市">
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading & Error States -->
+          <div class="loading-state" id="loadingCounties">
+            <div class="spinner"></div>
+            <span>載入各地天氣預報中，請稍候...</span>
+          </div>
+
+          <!-- County Accordion Cards Container -->
+          <div class="counties-accordion-grid" id="countiesDisplay">
+            <!-- Dynamically populated by app.js -->
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ====================================================================
+           SECTION 3: 即時觀測圖 (Live Radar, Satellite, Temperature)
+           ==================================================================== -->
+
+      <section class="view-panel" id="panelImagery">
+        <div class="panel-header-strip">
+          <div class="panel-info">
+            <h2 class="panel-title">📡 即時觀測圖 (雷達回波 • 衛星雲圖 • 氣溫分佈)</h2>
+            <p class="panel-desc">由中央氣象署官方 CDN 每 10 分鐘自動同步更新，點擊任意圖資即可開啟全螢幕高解析度檢視。</p>
+          </div>
+          <div class="sync-frequency-badge">
+            <span class="refresh-cycle-dot"></span>
+            <span id="imagerySyncTime">約每 10 分鐘自動更新</span>
+          </div>
+        </div>
+
+        <!-- 4 Major Meteorological Imagery Cards -->
+        <div class="imagery-grid">
+          <!-- Image 1: 雷達回波圖 -->
+          <div class="imagery-card" data-img-title="雷達回波圖 (Radar Composite)" data-img-src="https://www.cwa.gov.tw/Data/radar/CV1_3600.png">
+            <div class="card-caption-row">
+              <div>
+                <h3 class="img-card-title">雷達回波圖</h3>
+                <span class="img-card-sub">臺灣及鄰近海域即時降水粒子回波</span>
+              </div>
+              <span class="source-tag">中央氣象署</span>
+            </div>
+            <div class="img-frame">
+              <img src="https://www.cwa.gov.tw/Data/radar/CV1_3600.png" alt="中央氣象署即時雷達回波圖" class="live-weather-img" loading="lazy">
+              <div class="img-hover-overlay">
+                <span class="overlay-btn">🔍 點擊查看高清大圖</span>
+              </div>
+            </div>
+            <div class="card-foot-row">
+              <span class="img-cycle-note">更新頻率：每 10 分鐘</span>
+              <a href="https://www.cwa.gov.tw/" target="_blank" rel="noopener noreferrer" class="img-official-link">中央氣象署官網 ↗</a>
+            </div>
+          </div>
+
+          <!-- Image 2: 真實色彩衛星雲圖 -->
+          <div class="imagery-card" data-img-title="真實色彩衛星雲圖 (Visible Satellite)" data-img-src="https://www.cwa.gov.tw/Data/satellite/LCC_TRGB_2750/LCC_TRGB_2750.jpg">
+            <div class="card-caption-row">
+              <div>
+                <h3 class="img-card-title">衛星雲圖 (真實色彩)</h3>
+                <span class="img-card-sub">東亞與西太平洋高解析可見光雲系</span>
+              </div>
+              <span class="source-tag">中央氣象署</span>
+            </div>
+            <div class="img-frame">
+              <img src="https://www.cwa.gov.tw/Data/satellite/LCC_TRGB_2750/LCC_TRGB_2750.jpg" alt="中央氣象署真實色彩衛星雲圖" class="live-weather-img" loading="lazy">
+              <div class="img-hover-overlay">
+                <span class="overlay-btn">🔍 點擊查看高清大圖</span>
+              </div>
+            </div>
+            <div class="card-foot-row">
+              <span class="img-cycle-note">更新頻率：每 10 分鐘</span>
+              <a href="https://www.cwa.gov.tw/" target="_blank" rel="noopener noreferrer" class="img-official-link">中央氣象署官網 ↗</a>
+            </div>
+          </div>
+
+          <!-- Image 3: 彩色紅外線雲圖 -->
+          <div class="imagery-card" data-img-title="彩色紅外線衛星雲圖 (IR Satellite)" data-img-src="https://www.cwa.gov.tw/Data/satellite/LCC_IR1_CR_2750/LCC_IR1_CR_2750.jpg">
+            <div class="card-caption-row">
+              <div>
+                <h3 class="img-card-title">衛星雲圖 (紅外線色調強化)</h3>
+                <span class="img-card-sub">雲頂溫度色調強化，判別對流旺盛度</span>
+              </div>
+              <span class="source-tag">中央氣象署</span>
+            </div>
+            <div class="img-frame">
+              <img src="https://www.cwa.gov.tw/Data/satellite/LCC_IR1_CR_2750/LCC_IR1_CR_2750.jpg" alt="中央氣象署彩色紅外線衛星雲圖" class="live-weather-img" loading="lazy">
+              <div class="img-hover-overlay">
+                <span class="overlay-btn">🔍 點擊查看高清大圖</span>
+              </div>
+            </div>
+            <div class="card-foot-row">
+              <span class="img-cycle-note">更新頻率：每 10 分鐘</span>
+              <a href="https://www.cwa.gov.tw/" target="_blank" rel="noopener noreferrer" class="img-official-link">中央氣象署官網 ↗</a>
+            </div>
+          </div>
+
+          <!-- Image 4: 全台即時溫度分佈圖 -->
+          <div class="imagery-card" data-img-title="全台即時氣溫分佈圖 (Temperature Analysis)" data-img-src="https://www.cwa.gov.tw/Data/temperature/temp.jpg">
+            <div class="card-caption-row">
+              <div>
+                <h3 class="img-card-title">即時氣溫分佈圖</h3>
+                <span class="img-card-sub">臺灣本島與離島測站等溫線客觀分析</span>
+              </div>
+              <span class="source-tag">中央氣象署</span>
+            </div>
+            <div class="img-frame">
+              <img src="https://www.cwa.gov.tw/Data/temperature/temp.jpg" alt="中央氣象署即時溫度分佈圖" class="live-weather-img" loading="lazy">
+              <div class="img-hover-overlay">
+                <span class="overlay-btn">🔍 點擊查看高清大圖</span>
+              </div>
+            </div>
+            <div class="card-foot-row">
+              <span class="img-cycle-note">更新頻率：每 10 分鐘</span>
+              <a href="https://www.cwa.gov.tw/" target="_blank" rel="noopener noreferrer" class="img-official-link">中央氣象署官網 ↗</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           SECTION 4: 颱風追蹤中心 (Typhoon Tracking Center)
+           ==================================================================== -->
+      <section class="view-panel" id="panelTyphoon">
+        <div class="panel-header-strip">
+          <div class="panel-info">
+            <h2 class="panel-title">🌀 颱風追蹤中心 (Typhoon Tracking Center)</h2>
+            <p class="panel-desc">監測西北太平洋與南海海域熱帶低氣壓與颱風路徑潛勢，整合動態暴風圈風場與最新警報發布狀態。</p>
+          </div>
+          <div class="typhoon-status-pill calm-status" id="typhoonStatusPill">
+            <span class="calm-dot"></span>
+            <span id="typhoonStatusText">目前無發布中的陸上/海上颱風警報</span>
+          </div>
+        </div>
+
+        <!-- Typhoon Dashboard Grid -->
+        <div class="typhoon-dashboard-grid">
+          <!-- Left: Pacific Storm Dynamic Map -->
+          <div class="typhoon-map-wrapper">
+            <div class="typhoon-map-head">
+              <span class="map-title-text">西北太平洋熱帶氣旋與動態海象風場</span>
+              <span class="map-provider-text">Windy ECMWF Real-time</span>
+            </div>
+            <div class="typhoon-iframe-box">
+              <iframe 
+                id="typhoonWindyFrame"
+                src="https://embed.windy.com/embed2.html?lat=21.5&lon=124.0&detailLat=23.7&detailLon=121.0&width=100%&height=560&zoom=5&level=surface&overlay=wind&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=celsius&radarRange=-1"
+                frameborder="0"
+                title="Typhoon Pacific Tracking Streamlines">
+              </iframe>
+            </div>
+          </div>
+
+          <!-- Right: Typhoon Specs & Readiness Checklist -->
+          <div class="typhoon-sidebar">
+            <!-- Advisory Status Box -->
+            <div class="advisory-card">
+              <div class="advisory-card-head">
+                <span class="advisory-badge">氣旋即時簡報</span>
+                <span class="advisory-time" id="typhoonQueryTime">今日 實時監控</span>
+              </div>
+              <div class="advisory-main-message" id="typhoonAdvisoryMsg">
+                目前西北太平洋及南海海域海面平靜，無發布中陸上或海上颱風警報。臺灣各海面風浪大致良好。
+              </div>
+
+              <div class="typhoon-specs-table">
+                <div class="spec-row">
+                  <span class="spec-k">警報發布標準：</span>
+                  <span class="spec-v">海上：24hr 暴風圈抵達 / 陸上：18hr 抵達</span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-k">監控熱帶低壓：</span>
+                  <span class="spec-v">0 個熱帶性低氣壓發展中</span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-k">周邊海象浪高：</span>
+                  <span class="spec-v">約 1.0 ~ 1.8 公尺（平浪至小浪）</span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-k">防颱應變中心：</span>
+                  <span class="spec-v">常態待命模式</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cyclone Intensity Scale Reference -->
+            <div class="typhoon-scale-card">
+              <h4 class="card-inner-h4">颱風強度分類標準 (中央氣象署標準)</h4>
+              <div class="scale-rows">
+                <div class="scale-row-item">
+                  <span class="level-pill cat-tropical">熱帶性低氣壓 (TD)</span>
+                  <span class="wind-spec">中心最大風速 &lt; 17.2 m/s (7 級)</span>
+                </div>
+                <div class="scale-row-item">
+                  <span class="level-pill cat-light">輕度颱風</span>
+                  <span class="wind-spec">17.2 ~ 32.6 m/s (8 ~ 11 級)</span>
+                </div>
+                <div class="scale-row-item">
+                  <span class="level-pill cat-medium">中度颱風</span>
+                  <span class="wind-spec">32.7 ~ 50.9 m/s (12 ~ 15 級)</span>
+                </div>
+                <div class="scale-row-item">
+                  <span class="level-pill cat-severe">強烈颱風</span>
+                  <span class="wind-spec">≥ 51.0 m/s (16 級以上)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Precautionary Checklist -->
+            <div class="safety-checklist-card">
+              <h4 class="card-inner-h4">🛡️ 防颱防汛自主檢核提示</h4>
+              <ul class="checklist-items">
+                <li>清理戶外排水孔、落水口與陽台雜物以防積水。</li>
+                <li>檢視門窗緊固，加強廣告招牌、花盆等懸掛物固定。</li>
+                <li>備妥緊急手電筒、行動電源、飲用水與乾糧備品。</li>
+                <li>若海警發布，請避免前往海邊戲水觀浪或山區溯溪。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           SECTION 5: 災害示警特報 (Severe Weather Alerts)
+           ==================================================================== -->
+      <section class="view-panel" id="panelAlerts">
+        <div class="panel-header-strip">
+          <div class="panel-info">
+            <h2 class="panel-title">⚠️ 災害示警與天氣警特報 (Weather Advisories)</h2>
+            <p class="panel-desc">依據中央氣象署即時發布之大雨、豪雨、陸上強風、高溫資訊及低溫特報進行視覺化分類顯示。</p>
+          </div>
+          <div class="alert-active-chip" id="alertActiveChip">
+            <span>發布中示警：2 項</span>
+          </div>
+        </div>
+
+        <div class="alerts-container-grid">
+          <!-- Active Alert Cards -->
+          <div class="active-alerts-list" id="activeAlertsList">
+            <!-- Alert 1 -->
+            <div class="alert-item-card level-yellow">
+              <div class="alert-card-head">
+                <div class="alert-type-badge">
+                  <span class="alert-icon">💨</span>
+                  <span class="alert-name">陸上強風特報</span>
+                </div>
+                <span class="alert-level-tag">黃色燈號 (注意)</span>
+              </div>
+              <h3 class="alert-headline">東北風偏強，臺灣沿海空曠地區留意 8 至 9 級強陣風</h3>
+              <p class="alert-body">
+                東北風增強，新竹至苗栗沿海空曠地區及澎湖、金門、馬祖易有 8 至 9 級強陣風，海面風浪增大，沿海作業船隻及海上休閒活動請注意安全。
+              </p>
+              <div class="alert-affected-counties">
+                <span class="counties-label">受影響縣市：</span>
+                <span class="county-tag">新北市</span>
+                <span class="county-tag">桃園市</span>
+                <span class="county-tag">新竹縣</span>
+                <span class="county-tag">苗栗縣</span>
+                <span class="county-tag">澎湖縣</span>
+                <span class="county-tag">金門縣</span>
+                <span class="county-tag">連江縣</span>
+              </div>
+            </div>
+
+            <!-- Alert 2 -->
+            <div class="alert-item-card level-orange">
+              <div class="alert-card-head">
+                <div class="alert-type-badge">
+                  <span class="alert-icon">☀️</span>
+                  <span class="alert-name">紫外線指數警示</span>
+                </div>
+                <span class="alert-level-tag">橙色燈號 (過量級)</span>
+              </div>
+              <h3 class="alert-headline">中南部中午前後紫外線達過量級，請注意防曬</h3>
+              <p class="alert-body">
+                中午前後各地陽光充沛，中南部紫外線指數預測達 8 至 9 級（過量級），戶外活動請做好遮陽防曬措施，並多補充水分以防熱傷害。
+              </p>
+              <div class="alert-affected-counties">
+                <span class="counties-label">受影響縣市：</span>
+                <span class="county-tag">臺中市</span>
+                <span class="county-tag">彰化縣</span>
+                <span class="county-tag">雲林縣</span>
+                <span class="county-tag">嘉義市</span>
+                <span class="county-tag">嘉義縣</span>
+                <span class="county-tag">臺南市</span>
+                <span class="county-tag">高雄市</span>
+                <span class="county-tag">屏東縣</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alert Types Reference Card -->
+          <div class="alert-reference-card">
+            <h3 class="ref-card-title">中央氣象署示警燈號體系說明</h3>
+            <div class="lamp-guide">
+              <div class="lamp-item">
+                <span class="lamp-dot dot-yellow"></span>
+                <div class="lamp-text">
+                  <strong>黃色燈號 (Yellow)</strong>
+                  <p>注意等級：天氣現象可能對人體或局部活動造成影響，請多加留意。</p>
+                </div>
+              </div>
+              <div class="lamp-item">
+                <span class="lamp-dot dot-orange"></span>
+                <div class="lamp-text">
+                  <strong>橙色燈號 (Orange)</strong>
+                  <p>警戒等級：極端氣溫或強風劇烈，請避免劇烈戶外曝曬或海邊作業。</p>
+                </div>
+              </div>
+              <div class="lamp-item">
+                <span class="lamp-dot dot-red"></span>
+                <div class="lamp-text">
+                  <strong>紅色燈號 (Red)</strong>
+                  <p>危險等級：重大災害性天氣（如超大豪雨、強颱侵襲），應採取防災避難準備。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           SECTION 6: 微課程教學面板 (SQLite TemperatureForecasts)
+           ==================================================================== -->
+      <section class="view-panel" id="panelCourse">
+        <div class="panel-header-strip">
+          <div class="panel-info">
+            <h2 class="panel-title">📊 煥哥微課程 24 單元教學資料庫面板</h2>
+            <p class="panel-desc">SQLite 資料庫表格 <code>TemperatureForecasts</code> 持久化儲存與 HTML5 Canvas 一週最高/最低氣溫視覺化渲染。</p>
+          </div>
+          <div class="db-status-pill">
+            <span class="db-pulse-dot"></span>
+            <span>SQLite: data/data.db</span>
+          </div>
+        </div>
+
+        <div class="course-controls-bar">
+          <div class="region-select-wrap">
+            <label for="courseRegionSelect" class="form-label">
+              <span class="step-badge">單元 13</span> 📍 選擇預報氣象分區：
+            </label>
+            <select id="courseRegionSelect" class="custom-select">
+              <option value="北部地區" selected>北部地區 (North)</option>
+              <option value="中部地區">中部地區 (Central)</option>
+              <option value="南部地區">南部地區 (South)</option>
+              <option value="東北部地區">東北部地區 (Northeast)</option>
+              <option value="東部地區">東部地區 (East)</option>
+              <option value="東南部地區">東南部地區 (Southeast)</option>
+            </select>
+          </div>
+
+          <div class="table-meta-strip">
+            <span class="sql-chip">SELECT * FROM TemperatureForecasts</span>
+            <span class="unit-chip">單位：攝氏度 (°C)</span>
+          </div>
+        </div>
+
+        <div class="course-charts-grid">
+          <!-- Canvas Line Chart -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">📈 單元 14：一週最高與最低氣溫折線圖 (°C)</h3>
+              <div class="chart-legend-box">
+                <span class="legend-dot dot-red"></span><span>最高溫 (MaxT)</span>
+                <span class="legend-dot dot-blue"></span><span>最低溫 (MinT)</span>
+              </div>
+            </div>
+            <div class="canvas-container">
+              <canvas id="tempLineChart" width="700" height="280"></canvas>
+            </div>
+          </div>
+
+          <!-- Weekly Table -->
+          <div class="table-card">
+            <div class="table-card-head">
+              <h3 class="chart-title">📋 單元 15：顯示一週資料表格</h3>
+              <span class="table-record-count" id="tableRecordCount">7 筆預報紀錄</span>
+            </div>
+            <div class="course-table-wrap">
+              <table class="minimal-table">
+                <thead>
+                  <tr>
+                    <th>預報日期</th>
+                    <th>最低氣溫 (°C)</th>
+                    <th>最高氣溫 (°C)</th>
+                    <th>天氣現象</th>
+                  </tr>
+                </thead>
+                <tbody id="forecastTableBody">
+                  <!-- Populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Global Application Footer -->
+    <footer class="app-footer">
+      <div class="footer-inner">
+        <div class="footer-col-main">
+          <div class="footer-brand-title">Taiwan Weather Central ｜ 台灣天氣觀測網</div>
+          <p class="footer-description">
+            專業級氣象資訊整合平台：中央氣象署 (CWA) 爬蟲 ➔ SQLite 資料庫持久化 ➔ GIS GeoJSON 空間渲染 ➔ 22 縣市詳細預報 ➔ 雷達回波/衛星雲圖觀測。
+          </p>
+          <div class="footer-legal">
+            © 2026 Taiwan Weather Central. 資料來源：交通部中央氣象署開放資料平台 (CWA OpenData)。
+          </div>
+        </div>
+
+        <div class="footer-col-tags">
+          <div class="pipeline-tags">
+            <span class="p-tag">CWA 爬蟲</span>
+            <span class="p-tag">SQLite DB</span>
+            <span class="p-tag">FastAPI</span>
+            <span class="p-tag">GeoJSON GIS</span>
+            <span class="p-tag">Leaflet</span>
+            <span class="p-tag">Windy ECMWF</span>
+            <span class="p-tag">Vercel Ready</span>
+          </div>
+          <a href="https://github.com/yuan0307212-ops/L3-CWA" target="_blank" rel="noopener" class="footer-repo-link">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+            <span>GitHub Repository</span>
+          </a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- High-Resolution Image Modal (Lightbox) -->
+  <div class="image-modal" id="imageModal" aria-hidden="true" role="dialog">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-content-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalImgTitle">即時觀測圖資</h3>
+        <button class="modal-close-btn" id="modalCloseBtn" aria-label="關閉預覽">✕</button>
+      </div>
+      <div class="modal-body">
+        <img src="" alt="氣象高清圖資預覽" id="modalImgTag" class="modal-full-img">
+      </div>
+      <div class="modal-footer">
+        <span class="modal-source-text">出處：交通部中央氣象署 (CWA) • 圖片每 10 分鐘自動更替</span>
+        <button class="modal-btn-download" id="modalRefreshImgBtn">🔄 刷新圖資</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Core JavaScript Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
