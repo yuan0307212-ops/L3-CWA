@@ -136,99 +136,122 @@
           </div>
         </div>
 
-        <!-- GIS Master Control Toolbar -->
-        <div class="gis-master-toolbar" id="gisMasterToolbar">
-          <!-- Row 1: Weather Metric Modes -->
-          <div class="gis-toolbar-row">
-            <div class="gis-toolbar-label">
-              <span class="toolbar-label-icon">📊</span>
-              <span>切換觀測：</span>
-            </div>
-            <div class="gis-btn-group" id="gisMetricGroup">
-              <button class="gis-metric-btn active" data-metric="temp" title="切換為氣溫 (°C) 觀測模式">
-                <span class="btn-emoji">🌡️</span> 氣溫
-              </button>
-              <button class="gis-metric-btn" data-metric="wind" title="切換為風速 (m/s) 與風向觀測模式">
-                <span class="btn-emoji">💨</span> 風速
-              </button>
-              <button class="gis-metric-btn" data-metric="rain" title="切換為降雨機率 (PoP %) 模式">
-                <span class="btn-emoji">🌧️</span> 降雨
-              </button>
-              <button class="gis-metric-btn" data-metric="fog" title="切換為濃霧特報與能見度監控模式">
-                <span class="btn-emoji">🌫️</span> 濃霧
-              </button>
-              <button class="gis-metric-btn" data-metric="humidity" title="切換為相對濕度 (%) 模式">
-                <span class="btn-emoji">💧</span> 濕度
-              </button>
-              <button class="gis-metric-btn" data-metric="aqi" title="切換為空氣品質 (AQI) 模式">
-                <span class="btn-emoji">🍃</span> 空氣 AQI
-              </button>
-              <button class="gis-metric-btn" data-metric="pressure" title="切換為大氣氣壓 (hPa) 模式">
-                <span class="btn-emoji">🧭</span> 氣壓
-              </button>
-              <button class="gis-metric-btn gis-stream-switch" data-metric="windy" title="切換為 Windy 高解析動態流場視圖 (風場/雷達/霧)">
-                <span class="btn-emoji">🌀</span> Windy 動態流場
-              </button>
-            </div>
-          </div>
-
-          <!-- Row 2: Basemaps & Dynamic Radar Overlay -->
-          <div class="gis-toolbar-row gis-secondary-row">
-            <div class="gis-toolbar-subgroup">
-              <div class="gis-toolbar-label">
-                <span class="toolbar-label-icon">🗺️</span>
-                <span>底圖：</span>
-              </div>
-              <div class="gis-btn-group" id="gisBasemapGroup">
-                <button class="gis-sub-btn active" data-basemap="satellite" title="ESRI 衛星影像底圖">🛰️ 衛星</button>
-                <button class="gis-sub-btn" data-basemap="dark" title="CartoDB 深色極簡底圖">🌙 深色</button>
-                <button class="gis-sub-btn" data-basemap="terrain" title="OpenTopo 地形等高線圖">⛰️ 地形</button>
-                <button class="gis-sub-btn" data-basemap="street" title="OpenStreetMap 標準街道圖">🗺️ 街道</button>
-              </div>
-            </div>
-
-            <div class="gis-toolbar-divider"></div>
-
-            <div class="gis-toolbar-subgroup">
-              <div class="gis-toolbar-label">
-                <span class="toolbar-label-icon">📡</span>
-                <span>動態圖層：</span>
-              </div>
-              <div class="gis-btn-group" id="gisOverlayGroup">
-                <button class="gis-sub-btn" id="btnRadarOverlay" data-overlay="radar" title="開啟/關閉即時雷達回波雲圖疊加">
-                  🌧️ 雷達回波 <span class="overlay-tag" id="radarStateTag">OFF</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Dynamic Hint & Prompt Banner (即時提示條) -->
-          <div class="gis-hint-banner" id="gisHintBanner">
-            <div class="hint-left-pill">
-              <span class="hint-bell-icon">💡</span>
-              <span class="hint-mode-badge" id="gisHintModeBadge">氣溫觀測模式</span>
-            </div>
-            <div class="hint-content-text" id="gisHintText">
-              目前顯示全台中央氣象署實體測站即時溫度 (°C) ，紅色為高溫熱區、藍綠色為涼爽山區，點擊標籤可開啟詳細遙測卡片。
-            </div>
-            <div class="hint-right-tag" id="gisHintActionTag">
-              <span>● 即時渲染中</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- GIS Map Container -->
+        <!-- GIS Map Container (now borderless, buttons float inside) -->
         <div class="gis-map-full-wrap">
-          <div id="gisMap" style="width:100%;height:600px;border-radius:0 0 16px 16px;overflow:hidden;"></div>
+          <div id="gisMap" style="width:100%;height:620px;border-radius:16px;overflow:hidden;"></div>
+
           <!-- Embedded Windy frame when Windy mode is active -->
-          <div id="gisWindyContainer" style="display:none;width:100%;height:600px;border-radius:0 0 16px 16px;overflow:hidden;position:relative;">
+          <div id="gisWindyContainer" style="display:none;width:100%;height:620px;border-radius:16px;overflow:hidden;position:relative;">
             <iframe 
               id="gisWindyFrame"
-              src="https://embed.windy.com/embed2.html?lat=23.7&lon=120.9&detailLat=23.7&detailLon=120.9&width=100%25&height=600&zoom=7&level=surface&overlay=wind&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=celsius&radarRange=-1"
+              src="https://embed.windy.com/embed2.html?lat=23.7&lon=120.9&detailLat=23.7&detailLon=120.9&width=100%25&height=620&zoom=7&level=surface&overlay=wind&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=celsius&radarRange=-1"
               frameborder="0"
               style="width:100%;height:100%;border:none;"
               title="Windy Dynamic Real-time Flow Stream">
             </iframe>
+          </div>
+
+          <!-- ╔══════════════════════════════════════════╗
+               ║  Floating Layer Control Button + Panel   ║
+               ╚══════════════════════════════════════════╝ -->
+          <div class="gis-float-ctrl" id="gisFloatCtrl">
+            <!-- Trigger button -->
+            <button class="gis-ctrl-trigger" id="gisCtrlTrigger" title="點擊開啟圖層控制面板">
+              <span class="ctrl-trigger-icon">🎛️</span>
+              <span class="ctrl-trigger-label">圖層控制</span>
+              <span class="ctrl-trigger-pulse"></span>
+            </button>
+
+            <!-- Floating panel -->
+            <div class="gis-ctrl-panel" id="gisCtrlPanel" aria-hidden="true">
+              <div class="ctrl-panel-header">
+                <div class="ctrl-panel-title">
+                  <span class="ctrl-panel-icon">🗺️</span>
+                  <span>GIS 圖層控制中心</span>
+                </div>
+                <button class="ctrl-panel-close" id="gisCtrlClose" aria-label="關閉">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+
+              <!-- Section: Metric -->
+              <div class="ctrl-section">
+                <div class="ctrl-section-label">
+                  <span>📊</span><span>觀測資料</span>
+                </div>
+                <div class="ctrl-metric-grid" id="gisMetricGroup">
+                  <button class="ctrl-metric-btn active" data-metric="temp">
+                    <span class="ctrl-btn-emoji">🌡️</span>
+                    <span class="ctrl-btn-name">氣溫</span>
+                  </button>
+                  <button class="ctrl-metric-btn" data-metric="wind">
+                    <span class="ctrl-btn-emoji">💨</span>
+                    <span class="ctrl-btn-name">風速</span>
+                  </button>
+                  <button class="ctrl-metric-btn" data-metric="rain">
+                    <span class="ctrl-btn-emoji">🌧️</span>
+                    <span class="ctrl-btn-name">降雨</span>
+                  </button>
+                  <button class="ctrl-metric-btn" data-metric="fog">
+                    <span class="ctrl-btn-emoji">🌫️</span>
+                    <span class="ctrl-btn-name">濃霧</span>
+                  </button>
+                  <button class="ctrl-metric-btn" data-metric="humidity">
+                    <span class="ctrl-btn-emoji">💧</span>
+                    <span class="ctrl-btn-name">濕度</span>
+                  </button>
+                  <button class="ctrl-metric-btn" data-metric="aqi">
+                    <span class="ctrl-btn-emoji">🍃</span>
+                    <span class="ctrl-btn-name">AQI</span>
+                  </button>
+                  <button class="ctrl-metric-btn" data-metric="pressure">
+                    <span class="ctrl-btn-emoji">🧭</span>
+                    <span class="ctrl-btn-name">氣壓</span>
+                  </button>
+                  <button class="ctrl-metric-btn ctrl-windy-btn" data-metric="windy">
+                    <span class="ctrl-btn-emoji">🌀</span>
+                    <span class="ctrl-btn-name">Windy</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Section: Basemap -->
+              <div class="ctrl-section">
+                <div class="ctrl-section-label">
+                  <span>🗺️</span><span>底圖樣式</span>
+                </div>
+                <div class="ctrl-basemap-row" id="gisBasemapGroup">
+                  <button class="ctrl-basemap-btn active" data-basemap="satellite">🛰️ 衛星</button>
+                  <button class="ctrl-basemap-btn" data-basemap="dark">🌙 深色</button>
+                  <button class="ctrl-basemap-btn" data-basemap="terrain">⛰️ 地形</button>
+                  <button class="ctrl-basemap-btn" data-basemap="street">🗺️ 街道</button>
+                </div>
+              </div>
+
+              <!-- Section: Overlay -->
+              <div class="ctrl-section ctrl-section-last">
+                <div class="ctrl-section-label">
+                  <span>📡</span><span>動態圖層</span>
+                </div>
+                <div class="ctrl-overlay-row" id="gisOverlayGroup">
+                  <button class="ctrl-overlay-btn" id="btnRadarOverlay" data-overlay="radar">
+                    <span>🌧️ 即時雷達回波</span>
+                    <span class="ctrl-overlay-tag" id="radarStateTag">OFF</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Active Mode Status -->
+              <div class="ctrl-status-bar" id="gisHintBanner">
+                <span class="ctrl-status-badge" id="gisHintModeBadge">🌡️ 氣溫觀測模式</span>
+                <span class="ctrl-status-dot" id="gisHintActionTag">● 即時渲染中</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom hint bar (inside map wrap) -->
+          <div class="gis-bottom-hint" id="gisBottomHint">
+            <span class="gis-bottom-hint-text" id="gisHintText">目前顯示全台中央氣象署實體測站即時溫度 (°C)，紅色為高溫熱區、藍綠色為涼爽山區，點擊標籤可開啟詳細遙測卡片。</span>
           </div>
         </div>
       </section>

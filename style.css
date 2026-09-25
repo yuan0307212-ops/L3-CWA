@@ -2451,223 +2451,439 @@ body {
   to { transform: rotate(360deg); }
 }
 
-.gis-master-toolbar {
-  background: var(--bg-card, #131b2e);
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
-  border-bottom: none;
-  border-radius: 16px 16px 0 0;
-  padding: 16px 18px 12px 18px;
+/* ==========================================================================
+   GIS Floating Layer Control (Typhoon-Center Style)
+   ========================================================================== */
+
+/* Map wrapper: relative container for floating elements */
+.gis-map-full-wrap {
+  position: relative;
+}
+
+/* ── Floating Control Button ── */
+.gis-float-ctrl {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 800;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
-}
-
-.gis-toolbar-row {
-  display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 10px;
-  flex-wrap: wrap;
 }
 
-.gis-toolbar-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.825rem;
-  font-weight: 700;
-  color: var(--text-secondary, #94a3b8);
-  min-width: 82px;
-  flex-shrink: 0;
-}
-
-.gis-btn-group {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.gis-metric-btn {
+.gis-ctrl-trigger {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-secondary, #cbd5e1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.825rem;
-  font-weight: 600;
+  gap: 8px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, rgba(14, 20, 40, 0.92), rgba(30, 41, 80, 0.9));
+  border: 1.5px solid rgba(56, 189, 248, 0.55);
+  border-radius: 12px;
+  color: #e2f4ff;
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 0 0 0 rgba(56, 189, 248, 0.3),
+    0 4px 20px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: visible;
+}
+
+.gis-ctrl-trigger:hover {
+  background: linear-gradient(135deg, rgba(20, 30, 60, 0.95), rgba(40, 60, 120, 0.92));
+  border-color: #38bdf8;
+  color: #fff;
+  box-shadow:
+    0 0 18px rgba(56, 189, 248, 0.4),
+    0 6px 28px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.gis-ctrl-trigger.panel-open {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(30, 60, 120, 0.92));
+  border-color: #38bdf8;
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.5), 0 6px 28px rgba(0, 0, 0, 0.6);
+}
+
+.ctrl-trigger-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.ctrl-trigger-label {
   white-space: nowrap;
 }
 
-.gis-metric-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.25);
-  transform: translateY(-1px);
+/* Pulsing attention ring */
+.ctrl-trigger-pulse {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
+  animation: ctrl-pulse 2.2s ease-in-out infinite;
 }
 
-.gis-metric-btn.active {
-  background: rgba(14, 165, 233, 0.2);
-  color: #38bdf8;
-  border-color: #38bdf8;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+@keyframes ctrl-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.5); }
+  50%       { transform: scale(1.3); opacity: 0.8; box-shadow: 0 0 0 5px rgba(56, 189, 248, 0); }
 }
 
-.gis-stream-switch {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15));
-  border-color: rgba(139, 92, 246, 0.4);
-  color: #c084fc;
+/* ── Floating Panel ── */
+.gis-ctrl-panel {
+  width: 272px;
+  background: linear-gradient(160deg, rgba(8, 14, 32, 0.96) 0%, rgba(14, 22, 50, 0.96) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 16px;
+  padding: 0;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 20px 60px rgba(0, 0, 0, 0.7),
+    0 0 30px rgba(14, 165, 233, 0.1);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  overflow: hidden;
+  transform-origin: top right;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+  /* Hidden state */
+  transform: scale(0.88) translateY(-8px);
+  opacity: 0;
+  pointer-events: none;
 }
 
-.gis-stream-switch:hover {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(59, 130, 246, 0.3));
-  border-color: #c084fc;
-  color: #fff;
+.gis-ctrl-panel.panel-visible {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+  pointer-events: all;
 }
 
-.gis-stream-switch.active {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(59, 130, 246, 0.35));
-  border-color: #c084fc;
-  color: #fff;
-  box-shadow: 0 0 14px rgba(192, 132, 252, 0.4);
+/* Panel header */
+.ctrl-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.1), transparent);
 }
 
-.gis-secondary-row {
-  justify-content: flex-start;
-  padding-top: 4px;
-}
-
-.gis-toolbar-subgroup {
+.ctrl-panel-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #e2f4ff;
+  letter-spacing: 0.02em;
 }
 
-.gis-toolbar-divider {
-  width: 1px;
-  height: 22px;
-  background: rgba(255, 255, 255, 0.12);
-  margin: 0 6px;
+.ctrl-panel-icon {
+  font-size: 1rem;
 }
 
-.gis-sub-btn {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-muted, #94a3b8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 4px 10px;
+.ctrl-panel-close {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
-  font-size: 0.775rem;
-  font-weight: 500;
+  color: var(--text-muted, #94a3b8);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.ctrl-panel-close:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.ctrl-panel-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Panel Sections ── */
+.ctrl-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ctrl-section-last {
+  border-bottom: none;
+}
+
+.ctrl-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.7);
+  margin-bottom: 10px;
+}
+
+/* ── Metric Grid (2×4 icon buttons) ── */
+.ctrl-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.ctrl-metric-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 4px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ctrl-metric-btn:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.35);
+  transform: translateY(-2px);
+}
+
+.ctrl-metric-btn.active {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(6, 78, 140, 0.2));
+  border-color: #38bdf8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.ctrl-btn-emoji {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.ctrl-btn-name {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-secondary, #94a3b8);
   white-space: nowrap;
 }
 
-.gis-sub-btn:hover {
-  background: rgba(255, 255, 255, 0.09);
-  color: var(--text-main, #f8fafc);
-  border-color: rgba(255, 255, 255, 0.2);
+.ctrl-metric-btn.active .ctrl-btn-name {
+  color: #7dd3fc;
 }
 
-.gis-sub-btn.active {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border-color: #f59e0b;
+/* Windy button special purple style */
+.ctrl-windy-btn {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(59, 130, 246, 0.08));
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.ctrl-windy-btn:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(59, 130, 246, 0.2));
+  border-color: #c084fc;
+}
+
+.ctrl-windy-btn .ctrl-btn-name {
+  color: #c084fc;
+}
+
+.ctrl-windy-btn.active {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(59, 130, 246, 0.25));
+  border-color: #c084fc;
+  box-shadow: 0 0 14px rgba(192, 132, 252, 0.4);
+}
+
+/* ── Basemap Row ── */
+.ctrl-basemap-row {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.ctrl-basemap-btn {
+  flex: 1;
+  min-width: 54px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  font-size: 0.72rem;
   font-weight: 600;
+  color: rgba(148, 163, 184, 0.85);
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  transition: all 0.18s ease;
 }
 
-.overlay-tag {
-  display: inline-block;
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  margin-left: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-muted, #94a3b8);
+.ctrl-basemap-btn:hover {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fcd34d;
 }
 
-.overlay-tag.on {
+.ctrl-basemap-btn.active {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: #f59e0b;
+  color: #fbbf24;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+/* ── Overlay Row ── */
+.ctrl-overlay-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ctrl-overlay-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(148, 163, 184, 0.9);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.ctrl-overlay-btn:hover {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+
+.ctrl-overlay-btn.active {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+  color: #34d399;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.ctrl-overlay-tag {
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(148, 163, 184, 0.7);
+  letter-spacing: 0.04em;
+  transition: all 0.2s ease;
+}
+
+.ctrl-overlay-tag.on {
   background: #10b981;
   color: #fff;
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
 }
 
-/* Prompt Banner */
-.gis-hint-banner {
+/* ── Status Bar at bottom of panel ── */
+.ctrl-status-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: linear-gradient(90deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.6));
-  border: 1px solid rgba(56, 189, 248, 0.2);
-  border-radius: 10px;
-  padding: 8px 14px;
-  font-size: 0.8rem;
-  color: var(--text-main, #f1f5f9);
-  transition: all 0.3s ease;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(56, 189, 248, 0.05);
+  border-top: 1px solid rgba(56, 189, 248, 0.12);
+  gap: 8px;
 }
 
-.hint-left-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.hint-mode-badge {
-  background: rgba(56, 189, 248, 0.2);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  padding: 2px 8px;
-  border-radius: var(--radius-full, 9999px);
-  font-weight: 700;
-  font-size: 0.75rem;
-}
-
-.hint-content-text {
-  flex: 1;
-  color: #cbd5e1;
-  line-height: 1.4;
-  min-width: 200px;
-}
-
-.hint-right-tag {
-  color: #10b981;
+.ctrl-status-badge {
   font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  flex-shrink: 0;
-}
-
-.gis-map-full-wrap {
-  width: 100%;
-  border-radius: 0 0 16px 16px;
+  font-weight: 700;
+  color: #7dd3fc;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  padding: 3px 9px;
+  border-radius: 99px;
+  white-space: nowrap;
   overflow: hidden;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-  border: 1px solid var(--border-subtle, rgba(255,255,255,0.1));
-  border-top: none;
-  margin-top: 0;
-  position: relative;
+  text-overflow: ellipsis;
+  max-width: 160px;
 }
 
-#gisMap {
-  width: 100%;
-  height: 600px;
-  min-height: 400px;
+.ctrl-status-dot {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #10b981;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  animation: status-blink 2s ease-in-out infinite;
 }
 
+@keyframes status-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ── Bottom Hint Bar (inside map, above map edge) ── */
+.gis-bottom-hint {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 800;
+  max-width: calc(100% - 28px);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.gis-bottom-hint-text {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(226, 244, 255, 0.92);
+  background: linear-gradient(90deg, rgba(8, 14, 34, 0.88), rgba(14, 22, 50, 0.88));
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 99px;
+  padding: 6px 16px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.3s ease;
+}
+
+/* Keep legacy selectors referenced in JS */
+.hint-mode-badge { display: none; }
+.hint-content-text { display: none; }
+.hint-right-tag { display: none; }
+.hint-bell-icon { display: none; }
+.hint-left-pill { display: none; }
+
+
+/* #gisMap height controlled via inline style in HTML */
 @media (max-width: 768px) {
-  #gisMap {
-    height: 380px;
+  #gisMap, #gisWindyContainer {
+    height: 420px !important;
   }
 }
+
 
 /* ==========================================================================
    Scroll Down Hint — High Contrast Block

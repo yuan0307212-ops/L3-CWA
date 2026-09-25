@@ -713,14 +713,17 @@
   };
 
   function updateGisHint(metricKey, customHint, customBadge) {
-    const hintBadge = document.getElementById("gisHintModeBadge");
-    const hintText  = document.getElementById("gisHintText");
-    const actionTag = document.getElementById("gisHintActionTag");
     const cfg = METRIC_CONFIG[metricKey] || METRIC_CONFIG.temp;
 
-    if (hintBadge) hintBadge.textContent = customBadge || cfg.badge;
-    if (hintText)  hintText.textContent  = customHint  || cfg.hint;
-    if (actionTag) actionTag.innerHTML   = `<span>● ${cfg.status}</span>`;
+    // Panel status bar
+    const statusBadge = document.getElementById("gisHintModeBadge");
+    const statusDot   = document.getElementById("gisHintActionTag");
+    if (statusBadge) statusBadge.textContent = customBadge || cfg.badge;
+    if (statusDot)   statusDot.textContent   = `● ${cfg.status}`;
+
+    // Bottom floating hint text
+    const hintText = document.getElementById("gisHintText");
+    if (hintText) hintText.textContent = customHint || cfg.hint;
   }
 
   function getStationPinInfo(st, metric) {
@@ -863,8 +866,40 @@
   }
 
   function initGisToolbar() {
-    const metricBtns   = document.querySelectorAll("#gisMetricGroup .gis-metric-btn");
-    const basemapBtns  = document.querySelectorAll("#gisBasemapGroup .gis-sub-btn");
+    // ── Floating Panel Toggle ──
+    const trigger    = document.getElementById("gisCtrlTrigger");
+    const panel      = document.getElementById("gisCtrlPanel");
+    const closeBtn   = document.getElementById("gisCtrlClose");
+
+    function openPanel() {
+      panel.classList.add("panel-visible");
+      panel.setAttribute("aria-hidden", "false");
+      trigger.classList.add("panel-open");
+      // Hide pulse once user has opened the panel
+      const pulse = trigger.querySelector(".ctrl-trigger-pulse");
+      if (pulse) pulse.style.display = "none";
+    }
+    function closePanel() {
+      panel.classList.remove("panel-visible");
+      panel.setAttribute("aria-hidden", "true");
+      trigger.classList.remove("panel-open");
+    }
+
+    if (trigger) trigger.addEventListener("click", () => {
+      panel.classList.contains("panel-visible") ? closePanel() : openPanel();
+    });
+    if (closeBtn) closeBtn.addEventListener("click", closePanel);
+
+    // Close on outside click
+    document.addEventListener("click", (e) => {
+      if (panel && panel.classList.contains("panel-visible") &&
+          !panel.contains(e.target) && !trigger.contains(e.target)) {
+        closePanel();
+      }
+    });
+
+    const metricBtns   = document.querySelectorAll("#gisMetricGroup .ctrl-metric-btn");
+    const basemapBtns  = document.querySelectorAll("#gisBasemapGroup .ctrl-basemap-btn");
     const radarBtn     = document.getElementById("btnRadarOverlay");
     const radarTag     = document.getElementById("radarStateTag");
     const crawlBtn     = document.getElementById("gisCrawlerRefreshBtn");
@@ -972,8 +1007,9 @@
         });
     }
 
-    // 4. Crawler Trigger (如果沒有相關資料 可以先去爬蟲)
+    // 4. Crawler Trigger
     if (crawlBtn) {
+
       crawlBtn.addEventListener("click", async () => {
         if (crawlBtn.classList.contains("spinning")) return;
         crawlBtn.classList.add("spinning");
