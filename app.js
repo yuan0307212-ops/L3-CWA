@@ -958,7 +958,7 @@
         if (state.markersGroup) state.markersGroup.bringToFront();
         if (state.radarLayer) state.radarLayer.bringToFront();
 
-        const basemapNames = { satellite: "🛰️ ESRI 高解析衛星底圖", dark: "🌙 CartoDB 深色極簡底圖", terrain: "⛰️ OpenTopo 地形等高線圖", street: "🗺️ OpenStreetMap 標準街道圖" };
+        const basemapNames = { satellite: "🛰️ ESRI 高解析衛星影像底圖", terrain: "⛰️ OpenTopo 地形等高線圖" };
         updateGisHint(state.activeMetric, `已切換為【${basemapNames[basemapKey] || basemapKey}】底圖。`);
       });
     });
@@ -1002,10 +1002,85 @@
             state.radarLayer = L.tileLayer(radarUrl, { opacity: 0.65, zIndex: 300 }).addTo(state.leafletMap);
           }
         })
-        .catch(err => {
-          console.warn("無法取得 RainViewer 雷達圖資:", err);
-        });
+        .catch(err => { console.warn("無法取得 RainViewer 雷達圖資:", err); });
     }
+
+    // 3b. Satellite Cloud Overlay (CWA visible satellite image as overlay)
+    const cloudBtn = document.getElementById("btnCloudOverlay");
+    const cloudTag = document.getElementById("cloudStateTag");
+    state.cloudOverlay = false;
+    state.cloudLayer  = null;
+
+    // CWA IR overlay
+    const irBtn = document.getElementById("btnIrOverlay");
+    const irTag = document.getElementById("irStateTag");
+    state.irOverlay = false;
+    state.irLayer   = null;
+
+    // ── CWA satellite image bounds (台灣 + 鄰近海域)
+    const CWA_BOUNDS = [[20.0, 117.5], [27.5, 124.5]];
+    const CWA_VIS_URL  = "https://www.cwa.gov.tw/Data/satellite/LCC_TRGB_2750/LCC_TRGB_2750.jpg";
+    const CWA_IR_URL   = "https://www.cwa.gov.tw/Data/satellite/LCC_IR1_CR_2750/LCC_IR1_CR_2750.jpg";
+
+    function loadCWAOverlay(url, bounds, opacity) {
+      // Add cache-bust timestamp so browsers always reload fresh image
+      const ts = Math.floor(Date.now() / 600000); // changes every 10 min
+      return L.imageOverlay(`${url}?_t=${ts}`, bounds, {
+        opacity,
+        zIndex: 310,
+        crossOrigin: true
+      });
+    }
+
+    if (cloudBtn) {
+      cloudBtn.addEventListener("click", () => {
+        state.cloudOverlay = !state.cloudOverlay;
+        if (state.cloudOverlay) {
+          cloudTag.textContent = "ON";
+          cloudTag.classList.add("on");
+          cloudBtn.classList.add("active");
+          state.cloudLayer = loadCWAOverlay(CWA_VIS_URL, CWA_BOUNDS, 0.55).addTo(state.leafletMap);
+          updateGisHint(state.activeMetric, "🛰️ 已疊加【CWA 真實色彩衛星雲圖】，可觀察台灣周邊雲系分布！");
+        } else {
+          cloudTag.textContent = "OFF";
+          cloudTag.classList.remove("on");
+          cloudBtn.classList.remove("active");
+          if (state.cloudLayer) { state.leafletMap.removeLayer(state.cloudLayer); state.cloudLayer = null; }
+          updateGisHint(state.activeMetric, "已關閉衛星雲圖疊加層。");
+        }
+      });
+    }
+
+    if (irBtn) {
+      irBtn.addEventListener("click", () => {
+        state.irOverlay = !state.irOverlay;
+        if (state.irOverlay) {
+          irTag.textContent = "ON";
+          irTag.classList.add("on");
+          irBtn.classList.add("active");
+          state.irLayer = loadCWAOverlay(CWA_IR_URL, CWA_BOUNDS, 0.6).addTo(state.leafletMap);
+          updateGisHint(state.activeMetric, "🌡️ 已疊加【CWA 紅外線色調強化雲圖】，深紫/藍色代表旺盛對流雲頂！");
+        } else {
+          irTag.textContent = "OFF";
+          irTag.classList.remove("on");
+          irBtn.classList.remove("active");
+          if (state.irLayer) { state.leafletMap.removeLayer(state.irLayer); state.irLayer = null; }
+          updateGisHint(state.activeMetric, "已關閉紅外線雲圖疊加層。");
+        }
+      });
+    }
+
+    // Auto-refresh cloud overlays every 10 minutes
+    setInterval(() => {
+      if (state.cloudOverlay && state.cloudLayer && state.leafletMap) {
+        state.leafletMap.removeLayer(state.cloudLayer);
+        state.cloudLayer = loadCWAOverlay(CWA_VIS_URL, CWA_BOUNDS, 0.55).addTo(state.leafletMap);
+      }
+      if (state.irOverlay && state.irLayer && state.leafletMap) {
+        state.leafletMap.removeLayer(state.irLayer);
+        state.irLayer = loadCWAOverlay(CWA_IR_URL, CWA_BOUNDS, 0.6).addTo(state.leafletMap);
+      }
+    }, 600000);
 
     // 4. Crawler Trigger
     if (crawlBtn) {

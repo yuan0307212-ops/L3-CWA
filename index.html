@@ -156,9 +156,10 @@
                ╚══════════════════════════════════════════╝ -->
           <div class="gis-float-ctrl" id="gisFloatCtrl">
             <!-- Trigger button -->
-            <button class="gis-ctrl-trigger" id="gisCtrlTrigger" title="點擊開啟圖層控制面板">
-              <span class="ctrl-trigger-icon">🎛️</span>
-              <span class="ctrl-trigger-label">圖層控制</span>
+            <button class="gis-ctrl-trigger" id="gisCtrlTrigger" title="點擊切換觀測模式與地圖圖層">
+              <span class="ctrl-trigger-icon">🗺️</span>
+              <span class="ctrl-trigger-label">切換地圖模式</span>
+              <span class="ctrl-trigger-arrow">▾</span>
               <span class="ctrl-trigger-pulse"></span>
             </button>
 
@@ -167,7 +168,7 @@
               <div class="ctrl-panel-header">
                 <div class="ctrl-panel-title">
                   <span class="ctrl-panel-icon">🗺️</span>
-                  <span>GIS 圖層控制中心</span>
+                  <span>選擇觀測模式</span>
                 </div>
                 <button class="ctrl-panel-close" id="gisCtrlClose" aria-label="關閉">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -218,25 +219,31 @@
               <!-- Section: Basemap -->
               <div class="ctrl-section">
                 <div class="ctrl-section-label">
-                  <span>🗺️</span><span>底圖樣式</span>
+                  <span>🛰️</span><span>底圖樣式</span>
                 </div>
                 <div class="ctrl-basemap-row" id="gisBasemapGroup">
-                  <button class="ctrl-basemap-btn active" data-basemap="satellite">🛰️ 衛星</button>
-                  <button class="ctrl-basemap-btn" data-basemap="dark">🌙 深色</button>
-                  <button class="ctrl-basemap-btn" data-basemap="terrain">⛰️ 地形</button>
-                  <button class="ctrl-basemap-btn" data-basemap="street">🗺️ 街道</button>
+                  <button class="ctrl-basemap-btn active" data-basemap="satellite">🛰️ 衛星影像</button>
+                  <button class="ctrl-basemap-btn" data-basemap="terrain">⛰️ 地形圖</button>
                 </div>
               </div>
 
               <!-- Section: Overlay -->
               <div class="ctrl-section ctrl-section-last">
                 <div class="ctrl-section-label">
-                  <span>📡</span><span>動態圖層</span>
+                  <span>📡</span><span>疊加圖層 <small style="font-weight:400;opacity:0.6;">（可複選）</small></span>
                 </div>
                 <div class="ctrl-overlay-row" id="gisOverlayGroup">
                   <button class="ctrl-overlay-btn" id="btnRadarOverlay" data-overlay="radar">
                     <span>🌧️ 即時雷達回波</span>
                     <span class="ctrl-overlay-tag" id="radarStateTag">OFF</span>
+                  </button>
+                  <button class="ctrl-overlay-btn" id="btnCloudOverlay" data-overlay="cloud">
+                    <span>🌥️ 衛星雲圖疊加</span>
+                    <span class="ctrl-overlay-tag" id="cloudStateTag">OFF</span>
+                  </button>
+                  <button class="ctrl-overlay-btn" id="btnIrOverlay" data-overlay="ir">
+                    <span>🌡️ 紅外線雲圖</span>
+                    <span class="ctrl-overlay-tag" id="irStateTag">OFF</span>
                   </button>
                 </div>
               </div>
