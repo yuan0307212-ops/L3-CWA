@@ -2551,40 +2551,45 @@ body {
 
 /* ── Floating Panel ── */
 .gis-ctrl-panel {
-  width: 272px;
-  background: linear-gradient(160deg, rgba(8, 14, 32, 0.96) 0%, rgba(14, 22, 50, 0.96) 100%);
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  width: 280px;
+  /* White semi-transparent glassmorphism */
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.95);
   border-radius: 16px;
   padding: 0;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 20px 60px rgba(0, 0, 0, 0.7),
-    0 0 30px rgba(14, 165, 233, 0.1);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+    0 8px 32px rgba(0, 0, 0, 0.22),
+    0 2px 8px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   overflow: hidden;
   transform-origin: top right;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
-  /* Hidden state */
-  transform: scale(0.88) translateY(-8px);
-  opacity: 0;
-  pointer-events: none;
-}
-
-.gis-ctrl-panel.panel-visible {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease, max-height 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Default OPEN — panel is visible on load */
   transform: scale(1) translateY(0);
   opacity: 1;
   pointer-events: all;
+  max-height: 600px;
 }
+
+/* Collapsed state (toggled by JS) */
+.gis-ctrl-panel.panel-hidden {
+  transform: scale(0.94) translateY(-6px);
+  opacity: 0;
+  pointer-events: none;
+  max-height: 0;
+}
+
 
 /* Panel header */
 .ctrl-panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  background: linear-gradient(90deg, rgba(14, 165, 233, 0.1), transparent);
+  padding: 13px 15px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.08), rgba(56, 189, 248, 0.04));
 }
 
 .ctrl-panel-title {
@@ -2593,8 +2598,8 @@ body {
   gap: 8px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: #e2f4ff;
-  letter-spacing: 0.02em;
+  color: #0f172a;
+  letter-spacing: 0.01em;
 }
 
 .ctrl-panel-icon {
@@ -2607,19 +2612,19 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
-  color: var(--text-muted, #94a3b8);
+  color: #64748b;
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
 }
 
 .ctrl-panel-close:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.4);
-  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #ef4444;
 }
 
 .ctrl-panel-close svg {
@@ -2629,8 +2634,8 @@ body {
 
 /* ── Panel Sections ── */
 .ctrl-section {
-  padding: 14px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 12px 15px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .ctrl-section-last {
@@ -2641,12 +2646,12 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: rgba(148, 163, 184, 0.7);
-  margin-bottom: 10px;
+  color: #94a3b8;
+  margin-bottom: 9px;
 }
 
 /* ── Metric Grid (2×4 icon buttons) ── */
@@ -2662,23 +2667,24 @@ body {
   align-items: center;
   gap: 4px;
   padding: 9px 4px 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(203, 213, 225, 0.8);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ctrl-metric-btn:hover {
-  background: rgba(56, 189, 248, 0.1);
-  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(224, 242, 254, 0.9);
+  border-color: #38bdf8;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
 }
 
 .ctrl-metric-btn.active {
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(6, 78, 140, 0.2));
-  border-color: #38bdf8;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+  border-color: #0284c7;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25), 0 4px 12px rgba(2, 132, 199, 0.2);
 }
 
 .ctrl-btn-emoji {
@@ -2689,52 +2695,53 @@ body {
 .ctrl-btn-name {
   font-size: 0.65rem;
   font-weight: 600;
-  color: var(--text-secondary, #94a3b8);
+  color: #475569;
   white-space: nowrap;
 }
 
 .ctrl-metric-btn.active .ctrl-btn-name {
-  color: #7dd3fc;
+  color: #0369a1;
+  font-weight: 700;
 }
 
 /* Windy button special purple style */
 .ctrl-windy-btn {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(59, 130, 246, 0.08));
-  border-color: rgba(139, 92, 246, 0.3);
+  background: linear-gradient(135deg, rgba(233, 213, 255, 0.8), rgba(221, 214, 254, 0.8));
+  border-color: rgba(139, 92, 246, 0.35);
 }
 
 .ctrl-windy-btn:hover {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(59, 130, 246, 0.2));
-  border-color: #c084fc;
+  background: linear-gradient(135deg, rgba(216, 180, 254, 0.9), rgba(196, 181, 253, 0.9));
+  border-color: #8b5cf6;
 }
 
 .ctrl-windy-btn .ctrl-btn-name {
-  color: #c084fc;
+  color: #6d28d9;
 }
 
 .ctrl-windy-btn.active {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(59, 130, 246, 0.25));
-  border-color: #c084fc;
-  box-shadow: 0 0 14px rgba(192, 132, 252, 0.4);
+  background: linear-gradient(135deg, #e9d5ff, #c4b5fd);
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.25), 0 4px 12px rgba(124, 58, 237, 0.2);
 }
 
 /* ── Basemap Row ── */
 .ctrl-basemap-row {
   display: flex;
-  gap: 5px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .ctrl-basemap-btn {
   flex: 1;
-  min-width: 54px;
-  padding: 6px 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  min-width: 80px;
+  padding: 7px 10px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(203, 213, 225, 0.8);
   border-radius: 8px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: rgba(148, 163, 184, 0.85);
+  color: #475569;
   cursor: pointer;
   text-align: center;
   white-space: nowrap;
@@ -2742,16 +2749,17 @@ body {
 }
 
 .ctrl-basemap-btn:hover {
-  background: rgba(245, 158, 11, 0.1);
-  border-color: rgba(245, 158, 11, 0.35);
-  color: #fcd34d;
+  background: rgba(254, 243, 199, 0.9);
+  border-color: #f59e0b;
+  color: #92400e;
 }
 
 .ctrl-basemap-btn.active {
-  background: rgba(245, 158, 11, 0.18);
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
   border-color: #f59e0b;
-  color: #fbbf24;
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+  color: #78350f;
+  font-weight: 700;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
 }
 
 /* ── Overlay Row ── */
@@ -2765,13 +2773,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 11px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(203, 213, 225, 0.8);
   border-radius: 9px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  color: rgba(148, 163, 184, 0.9);
+  color: #475569;
   cursor: pointer;
   transition: all 0.18s ease;
   width: 100%;
@@ -2779,16 +2787,16 @@ body {
 }
 
 .ctrl-overlay-btn:hover {
-  background: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.35);
-  color: #34d399;
+  background: rgba(209, 250, 229, 0.8);
+  border-color: #10b981;
+  color: #065f46;
 }
 
 .ctrl-overlay-btn.active {
-  background: rgba(16, 185, 129, 0.15);
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
   border-color: #10b981;
-  color: #34d399;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+  color: #064e3b;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
 .ctrl-overlay-tag {
@@ -2796,8 +2804,8 @@ body {
   font-weight: 800;
   padding: 2px 7px;
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(148, 163, 184, 0.7);
+  background: rgba(0, 0, 0, 0.07);
+  color: #94a3b8;
   letter-spacing: 0.04em;
   transition: all 0.2s ease;
 }
@@ -2805,7 +2813,7 @@ body {
 .ctrl-overlay-tag.on {
   background: #10b981;
   color: #fff;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
 }
 
 /* ── Status Bar at bottom of panel ── */
@@ -2813,18 +2821,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
-  background: rgba(56, 189, 248, 0.05);
-  border-top: 1px solid rgba(56, 189, 248, 0.12);
+  padding: 9px 15px;
+  background: rgba(240, 249, 255, 0.8);
+  border-top: 1px solid rgba(14, 165, 233, 0.15);
   gap: 8px;
 }
 
 .ctrl-status-badge {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  color: #7dd3fc;
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  color: #0369a1;
+  background: rgba(14, 165, 233, 0.12);
+  border: 1px solid rgba(14, 165, 233, 0.25);
   padding: 3px 9px;
   border-radius: 99px;
   white-space: nowrap;

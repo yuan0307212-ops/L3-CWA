@@ -867,36 +867,35 @@
 
   function initGisToolbar() {
     // ── Floating Panel Toggle ──
+    // Panel is OPEN by default (CSS has no panel-hidden class initially)
     const trigger    = document.getElementById("gisCtrlTrigger");
     const panel      = document.getElementById("gisCtrlPanel");
     const closeBtn   = document.getElementById("gisCtrlClose");
 
+    let isPanelOpen = true; // starts open
+
     function openPanel() {
-      panel.classList.add("panel-visible");
+      panel.classList.remove("panel-hidden");
       panel.setAttribute("aria-hidden", "false");
       trigger.classList.add("panel-open");
-      // Hide pulse once user has opened the panel
-      const pulse = trigger.querySelector(".ctrl-trigger-pulse");
-      if (pulse) pulse.style.display = "none";
+      isPanelOpen = true;
     }
     function closePanel() {
-      panel.classList.remove("panel-visible");
+      panel.classList.add("panel-hidden");
       panel.setAttribute("aria-hidden", "true");
       trigger.classList.remove("panel-open");
+      isPanelOpen = false;
     }
 
+    // Start open — set trigger state
+    trigger.classList.add("panel-open");
+
     if (trigger) trigger.addEventListener("click", () => {
-      panel.classList.contains("panel-visible") ? closePanel() : openPanel();
+      isPanelOpen ? closePanel() : openPanel();
     });
     if (closeBtn) closeBtn.addEventListener("click", closePanel);
 
-    // Close on outside click
-    document.addEventListener("click", (e) => {
-      if (panel && panel.classList.contains("panel-visible") &&
-          !panel.contains(e.target) && !trigger.contains(e.target)) {
-        closePanel();
-      }
-    });
+    // NOTE: No outside-click close — panel is a persistent widget
 
     const metricBtns   = document.querySelectorAll("#gisMetricGroup .ctrl-metric-btn");
     const basemapBtns  = document.querySelectorAll("#gisBasemapGroup .ctrl-basemap-btn");
